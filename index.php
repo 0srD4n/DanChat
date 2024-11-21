@@ -44,7 +44,7 @@ $language = LANG;// user selected language
 $locale = LANGUAGES[LANG]['locale'];// user selected locale
 $dir = LANGUAGES[LANG]['dir'];// user selected language direction
 $scripts = []; //js enhancements
-$styles = []; //css styles
+$styles = ['./style.css']; //css styles
 $session = $_REQUEST['session'] ?? ''; //requested session
 // set session variable to cookie if cookies are enabled
 if(!isset($_REQUEST['session']) && isset($_COOKIE[COOKIENAME])){
@@ -380,151 +380,7 @@ function prepare_stylesheets(string $class): void
 	}
 	// styles CSS
     $styles['default'] = <<<CSS
-    .msg {padding: 0.5em 0; border-bottom: 1px solid #363636;}
-    input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; border-radius: 0.5em;}
-    #messages small {color: #989898;}
-    #messages {display: block; width: 80%;}
-    .messages #topic {display: block; width: 80%;}
-    .messages #chatters {display: block; float: right; width: 15%; overflow-y: auto; position: fixed; right: 0; max-height: 100%; bottom: 2em; top: 2em; text-decoration: none;}
-    .messages #chatters td, .messages #chatters tr, .messages #chatters th {display: table-row; line-height: 0.8em;}
-    .messages #chatters table a {display: table-row; text-decoration: none;}
-    body, iframe {
-        background-color: #000000;
-        color: #FFFFFF;
-        font-family: "Mulish", system-ui;
-        font-size: 14px;
-        text-align: center;
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        border: none;
-        outline: none;
-        box-shadow: none;
-    }
-    .post {
-        margin-top: 10px;
-    }
-    #rules-style {
-        color: red;
-        font-weight: bold;
-        padding-left: 10px;
-    }
-    #about-style {
-        color: green;
-        font-weight: bold;
-        padding-left: 10px;
-    }
-    #topic {
-        font-size: 14px;
-        font-weight: bold;
-        text-align: center;
-        color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 10px;
-    }
-    #frameset-mid {
-        background-image: none !important;
-    }
-    a:visited { color: #B33CB4; }
-    a:link { color: #00A2D4; }
-    a:active { color: #55A2D4; }
-    input[type=text], input[type=password], input[type=submit], select, textarea {
-        -webkit-appearance: none;
-        border: none;
-        background-color: rgba(120,120,120,0.3);
-        font-family: 'Mulish', system-ui;
-        color: #fff !important;
-        padding: 5px;
-        border-radius: 10px;
-    }
-    .error { color: #FF0033; text-align: left; }
-    .delbutton { background-color: #660000; }
-    .backbutton { background-color: #004400; }
-    #exitbutton { background-color: #AA0000; }
-    .setup table table,
-    .admin table table,
-    .profile table table {
-        width: 100%;
-        text-align: left;
-    }
-    .alogin table, .init table, .destroy_chat table, .delete_account table,
-    .sessions table, .filter table, .linkfilter table, .notes table,
-    .approve_waiting table, .del_confirm table, .profile table,
-    .admin table, .backup table, .setup table {
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .setup table table table,
-    .admin table table table,
-    .profile table table table {
-        border-spacing: 0px;
-        margin-left: auto;
-        margin-right: unset;
-        width: unset;
-    }
-    .setup table table td, .backup #restoresubmit, .backup #backupsubmit,
-    .admin table table td, .profile table table td, .login td+td,
-    .alogin td+td {
-        text-align: right;
-    }
-    .init td, .backup #restorecheck td, .admin #clean td, .admin #regnew td,
-    .session td, .messages, .inbox, .approve_waiting td, .choose_messages,
-    .greeting, .help, .login td, .alogin td {
-        text-align: left;
-    }
-    .approve_waiting #action td:only-child, .help #backcredit,
-    .login td:only-child, .alogin td:only-child, .init td:only-child {
-        text-align: center;
-    }
-    .sessions td, .sessions th, .approve_waiting td, .approve_waiting th {
-        padding: 5px;
-    }
-    .sessions td td { padding: 1px; }
-    .notes textarea { height: 80vh; width: 80%; }
-    .post table, .controls table, .login table {
-        border-spacing: 0px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .controls { overflow-y: none; }
-    #chatname {
-        font-size: 2em;
-        font-weight: bold;
-        text-align: center;
-        color: #FF0000;
-        position: relative;
-        animation: glitch 1.5s infinite;
-    }
-
-    @keyframes glitch {
-        0% {
-            text-shadow: 2px 2px #FF0000, -2px -2px #00FF00;
-            clip-path: inset(0 0 0 0);
-        }
-        20% {
-            text-shadow: -2px -2px #FF0000, 2px 2px #00FF00;
-            clip-path: inset(10% 0 0 0);
-        }
-        40% {
-            text-shadow: 2px -2px #FF0000, -2px 2px #00FF00;
-            clip-path: inset(0 0 10% 0);
-        }
-        60% {
-            text-shadow: -2px 2px #FF0000, 2px -2px #00FF00;
-            clip-path: inset(0 10% 0 0);
-        }
-        80% {
-            text-shadow: 2px 2px #FF0000, -2px -2px #00FF00;
-            clip-path: inset(0 0 0 10%);
-        }
-        100% {
-            text-shadow: -2px -2px #FF0000, 2px 2px #00FF00;
-            clip-path: inset(0 0 0 0);
-        }
-    }
+        a {text-decoration: none;}
     CSS;
 
 	if($class === 'frameset'){
@@ -602,6 +458,7 @@ function print_stylesheet(string $class): void
 {
 	global $scripts, $styles;
 	//default css
+    foreach($styles as $style) {         echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"$style\">";     } 	
 	echo "<style>$styles[default]</style>";
 	if ( $class === 'init' ) {
 		return;
@@ -2547,7 +2404,7 @@ function send_logout(): void
 {
 	global $U;
 	print_start('logout');
-	echo '<h1>'.sprintf(_('Bye %s, visit again soon!'), style_this(htmlspecialchars($U['nickname']), $U['style'])).'</h1>'.form_target('_parent', '').submit(_('Back to the login page.'), 'class="backbutton"').'</form>';
+	echo '<h1>'.sprintf(_('Bye %s, visit again soon! dont forget to Bookmark this page'), style_this(htmlspecialchars($U['nickname']), $U['style'])).'</h1>'.form_target('_parent', '').submit(_('Back to the login page.'), 'class="backbutton"').'</form>';
 	print_end();
 }
 
@@ -2568,7 +2425,6 @@ function send_colours(): void
 	echo '</b></kbd>'.form('profile').submit(_('Back to your Profile'), ' class="backbutton"').'</form>';
 	print_end();
 }
-
 function send_login(): void
 {
 	$ga=(int) get_setting('guestaccess');
@@ -2582,41 +2438,65 @@ function send_login(): void
 	if($englobal===1 && isset($_POST['globalpass'])){
 		echo hidden('globalpass', htmlspecialchars($_POST['globalpass']));
 	}
-	echo '<table>';
+	echo '<table id="login_table" style="width: 100%; max-width: 400px; margin: 0 auto; border: 1px solid #00ff00; border-radius: 10px; padding: 20px;">';
 	if($englobal!==1 || (isset($_POST['globalpass']) && $_POST['globalpass']==get_setting('globalpass'))){
-		echo '<tr><td>'._('Nickname:').'</td><td><input type="text" name="nick" size="15" autocomplete="username" autofocus></td></tr>';
-		echo '<tr><td>'._('Password:').'</td><td><input type="password" name="pass" size="15" autocomplete="current-password"></td></tr>';
+		echo '<tr><td class="matrix-text">SYSTEM > '._('Nickname:').'</td><td><input type="text" name="nick" size="15" autocomplete="username" autofocus class="cyber-input"></td></tr>';
+		echo '<tr><td class="matrix-text">SYSTEM > '._('Password:').'</td><td><input type="password" name="pass" size="15" autocomplete="current-password" class="cyber-input"></td></tr>';
 		send_captcha();
 		if($ga!==0){
 			if(get_setting('guestreg')!=0){
-				echo '<tr><td>'._('Repeat password<br>to register').'</td><td><input type="password" name="regpass" size="15" placeholder="'._('(optional)').'" autocomplete="new-password"></td></tr>';
+				echo '<tr><td class="matrix-text">SYSTEM > '._('Repeat password<br>to register').'</td><td><input type="password" name="regpass" size="15" placeholder="'._('(optional)').'" autocomplete="new-password" class="cyber-input"></td></tr>';
 			}
 			if($englobal===2){
-				echo '<tr><td>'._('Global Password:').'</td><td><input type="password" name="globalpass" size="15"></td></tr>';
+				echo '<tr><td class="matrix-text">SYSTEM > '._('Global Password:').'</td><td><input type="password" name="globalpass" size="15" class="cyber-input"></td></tr>';
 			}
-			echo '<tr><td colspan="2">'._('Guests, choose a colour:').'<br><select name="colour"><option value="">* '._('Random Colour').' *</option>';
+			echo '<tr><td colspan="2" class="matrix-text">SYSTEM > '._('Guests, choose a colour:').'<br><select name="colour" class="cyber-select"><option value="">* '._('Random Colour').' *</option>';
 			print_colours();
 			echo '</select></td></tr>';
 		}else{
-			echo '<tr><td colspan="2">'._('Sorry, currently members only!').'</td></tr>';
+			echo '<tr><td colspan="2" class="matrix-text">ERROR: '._('Sorry, currently members only!').'</td></tr>';
 		}
-		echo '<tr><td colspan="2">'.submit(_('Enter Chat')).'</td></tr></table></form>';
+		echo '<tr style="text-align: center; color: #ff0000;"><td colspan="2"><input type="submit" value="'._('INITIALIZE CONNECTION').'" class="cyber-button"></td></tr></table></form>';
 		get_nowchatting();
 		$rulestxt=get_setting('rulestxt');
 		if(!empty($rulestxt)){
-			echo '<div id="rules"><h2>'._('Rules')."</h2><b>$rulestxt</b></div>";
+			echo '<div id="rules" class="cyber-rules"><h2>SYSTEM PROTOCOLS</h2><b>$rulestxt</b></div>';
 		}
 	}else{
-		echo '<tr><td>'._('Global Password:').'</td><td><input type="password" name="globalpass" size="15" autofocus></td></tr>';
+		echo '<tr><td class="matrix-text">SYSTEM > '._('Global Password:').'</td><td><input type="password" name="globalpass" size="15" autofocus class="cyber-input"></td></tr>';
 		if($ga===0){
-			echo '<tr><td colspan="2">'._('Sorry, currently members only!').'</td></tr>';
+			echo '<tr><td colspan="2" class="matrix-text">ERROR: '._('Sorry, currently members only!').'</td></tr>';
 		}
-		echo '<tr><td colspan="2">'.submit(_('Enter Chat')).'</td></tr></table></form>';
+		echo '<tr><td colspan="2"><input type="submit" value="'._('INITIALIZE CONNECTION').'" class="cyber-button"></td></tr></table></form>';
 	}
-	echo '<p id="changelang">'._('Change language:');
+	echo '<h4 class="cyber-heading" style="font-size: 1.8em; font-weight: bold; text-align: center; color: #00ff00; position: relative; animation: neonPulse 2s infinite;">SYSTEM PROTOCOLS</h4>
+	<style>
+	@keyframes neonPulse {
+		0% {
+			text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00;
+			transform: scale(1);
+		}
+		50% {
+			text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 60px #00ff00;
+			transform: scale(1.05);
+		}
+		100% {
+			text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00;
+			transform: scale(1);
+		}
+	}
+	</style>';
+	echo '<p class="cyber-rules-text" style="text-align: center; color: #ff0000;">'._('No CP - No Spamming - No Gore/other illegal activity').'</p>';
+	echo '<div id="changelang" class="cyber-lang-select">
+		<div class="matrix-text">'._('Select System Language').'</div>
+		<div class="cyber-lang-grid">';
+	echo '<select id="langSelect" onchange="window.location.href=this.value" class="cyber-select">';
+	echo '<option value="" disabled selected>'._('Select Language').'</option>';
 	foreach(LANGUAGES as $lang=>$data){
-		echo " <a href=\"$_SERVER[SCRIPT_NAME]?lang=$lang\">$data[name]</a>";
+		echo '<option value="'.$_SERVER['SCRIPT_NAME'].'?lang='.$lang.'">'.$data['name'].'</option>';
 	}
+	echo '</select>';
+	echo '</div></div>';
 	echo '</p>'.credit();
 	print_end();
 }
@@ -2656,7 +2536,7 @@ function print_notifications(): void
 	$stmt->execute([$U['nickname']]);
 	$temp=$stmt->fetch(PDO::FETCH_NUM);
 	if($temp && $temp[0]>0){
-		echo '<p align="middle">' . $temp[0] . "&nbsp;" . _('Failed login attempt(s)') . "</p>";
+		echo '<p align="middle">' . $temp[0] . "&nbsp;" . _('Failed login attempt(s) You are imposter!') . "</p>";
 	}
 	if($U['status']>=2 && $U['eninbox']!=0){
 		$stmt=$db->prepare('SELECT COUNT(*) FROM ' . PREFIX . 'inbox WHERE recipient=?;');
@@ -2871,7 +2751,7 @@ function show_fails(): void
 	$temp=$stmt->fetch(PDO::FETCH_NUM);
 	if($temp && $temp[0]>0){
 		print_start('failednotice');
-		echo $temp[0] . "&nbsp;" . _('Failed login attempt(s)') . "<br>";
+		echo $temp[0] . "&nbsp;" . _('Failed login attempt(s) You are imposter!') . "<br>";
 		$stmt=$db->prepare('UPDATE ' . PREFIX . 'members SET loginfails=? WHERE nickname=?;');
 		$stmt->execute([0, $U['nickname']]);
 		echo form_target('_self', 'login').submit(_('Dismiss')).'</form></td>';
@@ -5052,4 +4932,3 @@ function load_config(): void
 	}
 	define('RESET_SUPERADMIN_PASSWORD', ''); //Use this to reset your superadmin password in case you forgot it
 }
-

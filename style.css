@@ -1,0 +1,221 @@
+.msg {padding: 0.5em 0; border-bottom: 1px solid #363636;}
+input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; border-radius: 0.5em;}
+#messages small {color: #989898;}
+#messages {display: block; width: 80%;}
+.messages #topic {display: block; width: 80%;}
+.messages #chatters {display: block; float: right; width: 15%; overflow-y: auto; position: fixed; right: 0; max-height: 100%; bottom: 2em; top: 2em; text-decoration: none;}
+.messages #chatters td, .messages #chatters tr, .messages #chatters th {display: table-row; line-height: 0.8em;}
+.messages #chatters table a {display: table-row; text-decoration: none;}
+body, iframe {
+    background-color: #000000;
+    color: #FFFFFF;
+    font-family: "Mulish", system-ui;
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+.post {
+    margin-top: 10px;
+}
+#rules-style {
+    color: red;
+    font-weight: bold;
+    padding-left: 10px;
+}
+#about-style {
+    color: green;
+    font-weight: bold;
+    padding-left: 10px;
+}
+#topic {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+#frameset-mid {
+    background-image: none !important;
+}
+a:visited { color: #B33CB4; }
+a:link { color: #00A2D4; }
+a:active { color: #55A2D4; }
+input[type=text], input[type=password], input[type=submit], select, textarea {
+    -webkit-appearance: none;
+    border: none;
+    background-color: rgba(120,120,120,0.3);
+    font-family: 'Mulish', system-ui;
+    color: #fff !important;
+    padding: 5px;
+    border-radius: 10px;
+}
+.error { color: #FF0033; text-align: left; }
+.delbutton { background-color: #660000; }
+.backbutton { background-color: #004400; }
+#exitbutton { background-color: #AA0000; }
+.setup table table,
+.admin table table,
+.profile table table {
+    width: 100%;
+    text-align: left;
+}
+.alogin table, .init table, .destroy_chat table, .delete_account table,
+.sessions table, .filter table, .linkfilter table, .notes table,
+.approve_waiting table, .del_confirm table, .profile table,
+.admin table, .backup table, .setup table {
+    margin-left: auto;
+    margin-right: auto;
+}
+.setup table table table,
+.admin table table table,
+.profile table table table {
+    border-spacing: 0px;
+    margin-left: auto;
+    margin-right: unset;
+    width: unset;
+}
+.setup table table td, .backup #restoresubmit, .backup #backupsubmit,
+.admin table table td, .profile table table td, .login td+td,
+.alogin td+td {
+    text-align: right;
+}
+.init td, .backup #restorecheck td, .admin #clean td, .admin #regnew td,
+.session td, .messages, .inbox, .approve_waiting td, .choose_messages,
+.greeting, .help, .login td, .alogin td {
+    text-align: left;
+}
+.approve_waiting #action td:only-child, .help #backcredit,
+.login td:only-child, .alogin td:only-child, .init td:only-child {
+    text-align: center;
+}
+.sessions td, .sessions th, .approve_waiting td, .approve_waiting th {
+    padding: 5px;
+}
+.sessions td td { padding: 1px; }
+.notes textarea { height: 80vh; width: 80%; }
+.post table, .controls table, .login table {
+    border-spacing: 0px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.controls { overflow-y: none; }
+#chatname {
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+    color: #FF0000;
+    position: relative;
+    animation: glitch 1.5s infinite;
+}
+
+@keyframes glitch {
+    0% {
+        text-shadow: 2px 2px #FF0000, -2px -2px #00FF00;
+        clip-path: inset(0 0 0 0);
+    }
+    20% {
+        text-shadow: -2px -2px #FF0000, 2px 2px #00FF00;
+        clip-path: inset(10% 0 0 0);
+    }
+    40% {
+        text-shadow: 2px -2px #FF0000, -2px 2px #00FF00;
+        clip-path: inset(0 0 10% 0);
+    }
+    60% {
+        text-shadow: -2px 2px #FF0000, 2px -2px #00FF00;
+        clip-path: inset(0 10% 0 0);
+    }
+    80% {
+        text-shadow: 2px 2px #FF0000, -2px -2px #00FF00;
+        clip-path: inset(0 0 0 10%);
+    }
+    100% {
+        text-shadow: -2px -2px #FF0000, 2px 2px #00FF00;
+        clip-path: inset(0 0 0 0);
+    }
+}
+#login_table {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #00ff00;
+    box-shadow: 0 0 20px #00ff00;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 50px auto;
+    animation: pulse 2s infinite;
+}
+
+#login_table input[type="text"],
+#login_table input[type="password"] {
+    background: #000;
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 8px 15px;
+    margin: 5px 0;
+    font-family: 'Courier New', monospace;
+    width: 250px;
+    transition: all 0.3s ease;
+}
+
+#login_table input[type="text"]:focus,
+#login_table input[type="password"]:focus {
+    box-shadow: 0 0 10px #00ff00;
+    outline: none;
+}
+
+#login_table input[type="submit"] {
+    background: #000;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    padding: 10px 25px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+}
+
+#login_table input[type="submit"]:hover {
+    background: #00ff00;
+    color: #000;
+    box-shadow: 0 0 15px #00ff00;
+}
+
+#login_table td {
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 5px #00ff00;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 20px #00ff00;
+    }
+    50% {
+        box-shadow: 0 0 30px #00ff00;
+    }
+    100% {
+        box-shadow: 0 0 20px #00ff00;
+    }
+}
+
+#login_table::before {
+    content: "SECURE LOGIN";
+    display: block;
+    text-align: center;
+    color: #00ff00;
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 10px #00ff00;
+    letter-spacing: 5px;
+}
+
