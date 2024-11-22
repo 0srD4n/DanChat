@@ -44,7 +44,7 @@ $language = LANG;// user selected language
 $locale = LANGUAGES[LANG]['locale'];// user selected locale
 $dir = LANGUAGES[LANG]['dir'];// user selected language direction
 $scripts = []; //js enhancements
-$styles = ['./style.css']; //css styles
+$styles = []; //css styles
 $session = $_REQUEST['session'] ?? ''; //requested session
 // set session variable to cookie if cookies are enabled
 if(!isset($_REQUEST['session']) && isset($_COOKIE[COOKIENAME])){
@@ -380,7 +380,151 @@ function prepare_stylesheets(string $class): void
 	}
 	// styles CSS
     $styles['default'] = <<<CSS
-        a {text-decoration: none;}
+    .msg {padding: 0.5em 0; border-bottom: 1px solid #363636;}
+    input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; border-radius: 0.5em;}
+    #messages small {color: #989898;}
+    #messages {display: block; width: 80%;}
+    .messages #topic {display: block; width: 80%;}
+    .messages #chatters {display: block; float: right; width: 15%; overflow-y: auto; position: fixed; right: 0; max-height: 100%; bottom: 2em; top: 2em; text-decoration: none;}
+    .messages #chatters td, .messages #chatters tr, .messages #chatters th {display: table-row; line-height: 0.8em;}
+    .messages #chatters table a {display: table-row; text-decoration: none;}
+    body, iframe {
+        background-color: #000000;
+        color: #FFFFFF;
+        font-family: "Mulish", system-ui;
+        font-size: 14px;
+        text-align: center;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: none;
+        outline: none;
+        box-shadow: none;
+    }
+    .post {
+        margin-top: 10px;
+    }
+    #rules-style {
+        color: red;
+        font-weight: bold;
+        padding-left: 10px;
+    }
+    #about-style {
+        color: green;
+        font-weight: bold;
+        padding-left: 10px;
+    }
+    #topic {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+    }
+    #frameset-mid {
+        background-image: none !important;
+    }
+    a:visited { color: #B33CB4; }
+    a:link { color: #00A2D4; }
+    a:active { color: #55A2D4; }
+    input[type=text], input[type=password], input[type=submit], select, textarea {
+        -webkit-appearance: none;
+        border: none;
+        background-color: rgba(120,120,120,0.3);
+        font-family: 'Mulish', system-ui;
+        color: #fff !important;
+        padding: 5px;
+        border-radius: 10px;
+    }
+    .error { color: #FF0033; text-align: left; }
+    .delbutton { background-color: #660000; }
+    .backbutton { background-color: #004400; }
+    #exitbutton { background-color: #AA0000; }
+    .setup table table,
+    .admin table table,
+    .profile table table {
+        width: 100%;
+        text-align: left;
+    }
+    .alogin table, .init table, .destroy_chat table, .delete_account table,
+    .sessions table, .filter table, .linkfilter table, .notes table,
+    .approve_waiting table, .del_confirm table, .profile table,
+    .admin table, .backup table, .setup table {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .setup table table table,
+    .admin table table table,
+    .profile table table table {
+        border-spacing: 0px;
+        margin-left: auto;
+        margin-right: unset;
+        width: unset;
+    }
+    .setup table table td, .backup #restoresubmit, .backup #backupsubmit,
+    .admin table table td, .profile table table td, .login td+td,
+    .alogin td+td {
+        text-align: right;
+    }
+    .init td, .backup #restorecheck td, .admin #clean td, .admin #regnew td,
+    .session td, .messages, .inbox, .approve_waiting td, .choose_messages,
+    .greeting, .help, .login td, .alogin td {
+        text-align: left;
+    }
+    .approve_waiting #action td:only-child, .help #backcredit,
+    .login td:only-child, .alogin td:only-child, .init td:only-child {
+        text-align: center;
+    }
+    .sessions td, .sessions th, .approve_waiting td, .approve_waiting th {
+        padding: 5px;
+    }
+    .sessions td td { padding: 1px; }
+    .notes textarea { height: 80vh; width: 80%; }
+    .post table, .controls table, .login table {
+        border-spacing: 0px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .controls { overflow-y: none; }
+    #chatname {
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        color: #FF0000;
+        text-shadow: 2px 2px 4px #000000;
+        animation: glitch 1s infinite;
+    }
+
+    @keyframes glitch {
+        0% {
+            text-shadow: 2px 2px 4px #000000, -2px -2px 4px #FF0000;
+            transform: translate(0);
+        }
+        20% {
+            text-shadow: 2px 2px 4px #000000, -2px -2px 4px #FF0000;
+            transform: translate(-2px, 2px);
+        }
+        40% {
+            text-shadow: 2px 2px 4px #000000, -2px -2px 4px #FF0000;
+            transform: translate(2px, -2px);
+        }
+        60% {
+            text-shadow: 2px 2px 4px #000000, -2px -2px 4px #FF0000;
+            transform: translate(-2px, -2px);
+        }
+        80% {
+            text-shadow: 2px 2px 4px #000000, -2px -2px 4px #FF0000;
+            transform: translate(2px, 2px);
+        }
+        100% {
+            text-shadow: 2px 2px 4px #000000, -2px -2px 4px #FF0000;
+            transform: translate(0);
+        }
+    }
     CSS;
 
 	if($class === 'frameset'){
@@ -413,7 +557,7 @@ function prepare_stylesheets(string $class): void
 		$styles['linkfilter'] .= 'table table td:nth-child(4),table table td:nth-child(5){width:5em} ';
 	}
 	if($class === 'post'){
-		$styles['post'] = '.spacer{width:10px} #firstline{vertical-align:top; padding-top: 10px;}';
+		$styles['post'] = '.spacer{width:10px} #firstline{vertical-align:top}';
 	}
 	if($class === 'messages'){
 		$styles['messages'] = '.nicklink{text-decoration:none}.channellink{text-decoration:underline;}';
@@ -458,7 +602,6 @@ function print_stylesheet(string $class): void
 {
 	global $scripts, $styles;
 	//default css
-    foreach($styles as $style) {         echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"$style\">";     } 	
 	echo "<style>$styles[default]</style>";
 	if ( $class === 'init' ) {
 		return;
@@ -544,13 +687,11 @@ function print_start(string $class='', int $ref=0, string $url=''): void
 	global $language, $dir;
 	prepare_stylesheets($class);
 	send_headers();
-
 	if(!empty($url)){
 		$url=str_replace('&amp;', '&', $url);// Don't escape "&" in URLs here, it breaks some (older) browsers and js refresh!
 		header("Refresh: $ref; URL=$url");
 	}
 	echo '<!DOCTYPE html><html lang="'.$language.'" dir="'.$dir.'"><head>'.meta_html();
-	echo '<link rel="icon" type="image/x-icon" href="danchat.svg">';
 	if(!empty($url)){
 		echo "<meta http-equiv=\"Refresh\" content=\"$ref; URL=$url\">";
 	}
@@ -1731,26 +1872,31 @@ function noframe_html() : string {
 function send_messages(): void
 {
 	global $U, $language;
-	$nocache = $U['nocache'] ? '&nc=' . substr(time(), -6) : '';
-	$sort = $U['sortupdown'] ? '#bottom' : '';
-	
+	if($U['nocache']){
+		$nocache='&nc='.substr(time(), -6);
+	}else{
+		$nocache='';
+	}
+	if($U['sortupdown']){
+		$sort='#bottom';
+	}else{
+		$sort='';
+	}
 	print_start('messages', (int) $U['refresh'], "$_SERVER[SCRIPT_NAME]?action=view&session=$U[session]&lang=$language$nocache$sort");
-	
 	echo '<a id="top"></a>';
-	echo '<a id="bottom_link" href="#bottom">' . _('Bottom') . '</a>';
-	echo '<div id="manualrefresh"><br>' . _('Manual refresh required') . '<br>' . form('view') . submit(_('Reload')) . '</form><br></div>';
-	
-	if (!$U['sortupdown']) {
+	echo '<a id="bottom_link" href="#bottom">'._('Bottom').'</a>';
+	echo '<div id="manualrefresh"><br>'._('Manual refresh required').'<br>'.form('view').submit(_('Reload')).'</form><br></div>';
+	if(!$U['sortupdown']){
 		echo '<div id="topic">';
 		echo get_setting('topic');
-		echo '<span id="rules-style">' . _('!rules') . '</span>';
+		echo '<span id="rules-style">'._('!rules').'</span>';
 		echo '  and  ';
-		echo '<span id="about-style">' . _('!about') . '</span>';
+		echo '<span id="about-style">'._('!about').'</span>';
 		echo '</div>';
 		print_chatters();
 		print_notifications();
 		print_messages();
-	} else {
+	}else{
 		print_messages();
 		print_notifications();
 		print_chatters();
@@ -1758,8 +1904,7 @@ function send_messages(): void
 		echo get_setting('topic');
 		echo '</div>';
 	}
-	
-	echo '<a id="bottom"></a><a id="top_link" href="#top">' . _('Top') . '</a>';
+	echo '<a id="bottom"></a><a id="top_link" href="#top">'._('Top').'</a>';
 	print_end();
 }
 
@@ -2007,16 +2152,16 @@ function send_post(string $rejected=''): void
 	if(!isset($_REQUEST['sendto'])){
 		$_REQUEST['sendto']='';
 	}
-	echo '<table><tr><td>'.form('post', '', 'onsubmit="return false;"');
+	echo '<table><tr><td>'.form('post');
 	echo hidden('postid', $U['postid']);
 	if(isset($_POST['multi'])){
 		echo hidden('multi', 'on');
 	}
 	echo '<table><tr><td><table><tr id="firstline"><td>'.style_this(htmlspecialchars($U['nickname']), $U['style']).'</td><td>:</td>';
 	if(isset($_POST['multi'])){
-		echo "<td><textarea name=\"message\" rows=\"3\" cols=\"40\" style=\"$U[style]\" autofocus onkeydown=\"if(event.key === 'Enter' && !event.shiftKey){ this.form.submit(); return false; }\">$rejected</textarea></td>";
+		echo "<td><textarea name=\"message\" rows=\"3\" cols=\"40\" style=\"$U[style]\" autofocus>$rejected</textarea></td>";
 	}else{
-		echo "<td><input type=\"text\" name=\"message\" value=\"$rejected\" size=\"40\" style=\"$U[style]\" autofocus onkeydown=\"if(event.key === 'Enter'){ this.form.submit(); return false; }\"></td>";
+		echo "<td><input type=\"text\" name=\"message\" value=\"$rejected\" size=\"40\" style=\"$U[style]\" autofocus></td>";
 	}
 	echo '<td>'.submit(_('Send to')).'</td><td><select name="sendto" size="1">';
 	echo '<option ';
@@ -2405,7 +2550,7 @@ function send_logout(): void
 {
 	global $U;
 	print_start('logout');
-	echo '<h1>'.sprintf(_('Bye %s, visit again soon! dont forget to Bookmark this page'), style_this(htmlspecialchars($U['nickname']), $U['style'])).'</h1>'.form_target('_parent', '').submit(_('Back to the login page.'), 'class="backbutton"').'</form>';
+	echo '<h1>'.sprintf(_('Bye %s, visit again soon!'), style_this(htmlspecialchars($U['nickname']), $U['style'])).'</h1>'.form_target('_parent', '').submit(_('Back to the login page.'), 'class="backbutton"').'</form>';
 	print_end();
 }
 
@@ -2426,6 +2571,7 @@ function send_colours(): void
 	echo '</b></kbd>'.form('profile').submit(_('Back to your Profile'), ' class="backbutton"').'</form>';
 	print_end();
 }
+
 function send_login(): void
 {
 	$ga=(int) get_setting('guestaccess');
@@ -2439,49 +2585,41 @@ function send_login(): void
 	if($englobal===1 && isset($_POST['globalpass'])){
 		echo hidden('globalpass', htmlspecialchars($_POST['globalpass']));
 	}
-	echo '<table id="login_table">';
+	echo '<table>';
 	if($englobal!==1 || (isset($_POST['globalpass']) && $_POST['globalpass']==get_setting('globalpass'))){
-		echo '<tr><td id="nickname_label">'._('Nickname:').'</td><td><input type="text" name="nick" size="15" autocomplete="username" autofocus id="nickname_input"></td></tr>';
-		echo '<tr><td id="password_label">'._('Password:').'</td><td><input type="password" name="pass" size="15" autocomplete="current-password" id="password_input"></td></tr>';
+		echo '<tr><td>'._('Nickname:').'</td><td><input type="text" name="nick" size="15" autocomplete="username" autofocus></td></tr>';
+		echo '<tr><td>'._('Password:').'</td><td><input type="password" name="pass" size="15" autocomplete="current-password"></td></tr>';
 		send_captcha();
 		if($ga!==0){
 			if(get_setting('guestreg')!=0){
-				echo '<tr><td id="regpass_label">'._('Repeat password<br>to register').'</td><td><input type="password" name="regpass" size="15" placeholder="'._('(optional)').'" autocomplete="new-password" id="regpass_input"></td></tr>';
+				echo '<tr><td>'._('Repeat password<br>to register').'</td><td><input type="password" name="regpass" size="15" placeholder="'._('(optional)').'" autocomplete="new-password"></td></tr>';
 			}
 			if($englobal===2){
-				echo '<tr><td id="globalpass_label">'._('Global Password:').'</td><td><input type="password" name="globalpass" size="15" id="globalpass_input"></td></tr>';
+				echo '<tr><td>'._('Global Password:').'</td><td><input type="password" name="globalpass" size="15"></td></tr>';
 			}
-			echo '<tr><td colspan="2" id="color_label">'._('Guests, choose a colour:').'<br><select name="colour" id="color_select"><option value="">* '._('Random Colour').' *</option>';
+			echo '<tr><td colspan="2">'._('Guests, choose a colour:').'<br><select name="colour"><option value="">* '._('Random Colour').' *</option>';
 			print_colours();
 			echo '</select></td></tr>';
 		}else{
-			echo '<tr><td colspan="2" id="members_only">'._('Sorry, currently members only!').'</td></tr>';
+			echo '<tr><td colspan="2">'._('Sorry, currently members only!').'</td></tr>';
 		}
-		echo '<tr><td colspan="2"><input type="submit" value="'._('INITIALIZE CONNECTION').'" id="submit_button"></td></tr></table></form>';
+		echo '<tr><td colspan="2">'.submit(_('Enter Chat')).'</td></tr></table></form>';
 		get_nowchatting();
 		$rulestxt=get_setting('rulestxt');
 		if(!empty($rulestxt)){
-			echo '<div id="rules"><h2 id="rules_title">SYSTEM PROTOCOLS</h2>'.$rulestxt.'</div>';
+			echo '<div id="rules"><h2>'._('Rules')."</h2><b>$rulestxt</b></div>";
 		}
 	}else{
-		echo '<tr><td id="global_pass_label">'._('Global Password:').'</td><td><input type="password" name="globalpass" size="15" autofocus id="global_pass_input"></td></tr>';
+		echo '<tr><td>'._('Global Password:').'</td><td><input type="password" name="globalpass" size="15" autofocus></td></tr>';
 		if($ga===0){
-			echo '<tr><td colspan="2" id="members_only_msg">'._('Sorry, currently members only!').'</td></tr>';
+			echo '<tr><td colspan="2">'._('Sorry, currently members only!').'</td></tr>';
 		}
-		echo '<tr><td colspan="2"><input type="submit" value="'._('INITIALIZE CONNECTION').'" id="submit_btn"></td></tr></table></form>';
+		echo '<tr><td colspan="2">'.submit(_('Enter Chat')).'</td></tr></table></form>';
 	}
-	echo '<h4 id="system_protocols">SYSTEM PROTOCOLS</h4>';
-	echo '<p id="rules_text">'._('No CP - No Spamming - No Gore/other illegal activity').'</p>';
-	echo '<div id="changelang">';
-	echo '<div id="lang_label">'._('Select System Language').'</div>';
-	echo '<div id="lang_grid">';
-	echo '<select id="langSelect" onchange="window.location.href=this.value">';
-	echo '<option value="" disabled selected>'._('Select Language').'</option>';
+	echo '<p id="changelang">'._('Change language:');
 	foreach(LANGUAGES as $lang=>$data){
-		echo '<option value="'.$_SERVER['SCRIPT_NAME'].'?lang='.$lang.'">'.$data['name'].'</option>';
+		echo " <a href=\"$_SERVER[SCRIPT_NAME]?lang=$lang\">$data[name]</a>";
 	}
-	echo '</select>';
-	echo '</div></div>';
 	echo '</p>'.credit();
 	print_end();
 }
@@ -2516,8 +2654,12 @@ function send_fatal_error(string $err): void
 function print_notifications(): void
 {
 	global $U, $db;
+	echo '<span id="notifications">';
+	$stmt=$db->prepare('SELECT loginfails FROM ' . PREFIX . 'members WHERE nickname=?;');
+	$stmt->execute([$U['nickname']]);
+	$temp=$stmt->fetch(PDO::FETCH_NUM);
 	if($temp && $temp[0]>0){
-		echo '<p align="middle">' . $temp[0] . "&nbsp;" . _('Failed login attempt(s) You are imposter!') . "</p>";
+		echo '<p align="middle">' . $temp[0] . "&nbsp;" . _('Failed login attempt(s)') . "</p>";
 	}
 	if($U['status']>=2 && $U['eninbox']!=0){
 		$stmt=$db->prepare('SELECT COUNT(*) FROM ' . PREFIX . 'inbox WHERE recipient=?;');
@@ -2732,7 +2874,7 @@ function show_fails(): void
 	$temp=$stmt->fetch(PDO::FETCH_NUM);
 	if($temp && $temp[0]>0){
 		print_start('failednotice');
-		echo $temp[0] . "&nbsp;" . _('Failed login attempt(s) You are imposter!') . "<br>";
+		echo $temp[0] . "&nbsp;" . _('Failed login attempt(s)') . "<br>";
 		$stmt=$db->prepare('UPDATE ' . PREFIX . 'members SET loginfails=? WHERE nickname=?;');
 		$stmt->execute([0, $U['nickname']]);
 		echo form_target('_self', 'login').submit(_('Dismiss')).'</form></td>';
@@ -3712,7 +3854,6 @@ function del_last_message(): void
 function print_messages(int $delstatus=0): void
 {
 	global $U, $db;
-
 	$dateformat=get_setting('dateformat');
 	if(!$U['embed'] && get_setting('imgembed')){
 		$removeEmbed=true;
@@ -3741,10 +3882,7 @@ function print_messages(int $delstatus=0): void
 		$stmt->execute([$U['status'], $delstatus, $U['nickname'], $U['nickname'], $entry]);
 		while($message=$stmt->fetch(PDO::FETCH_ASSOC)){
 			prepare_message_print($message, $removeEmbed);
-
 			echo "<div class=\"msg\"><label><input type=\"checkbox\" name=\"mid[]\" value=\"$message[id]\">";
-			echo '<div class="msg" onload="checkMentions(\'' . addslashes($message['text']) . '\')">';
-
 			if($timestamps){
 				echo ' <small>'.date($dateformat, $message['postdate']).' - </small>';
 			}
@@ -4158,7 +4296,7 @@ function init_chat(): void
 		ignore_user_abort(true);
 		set_time_limit(0);
 		if(DBDRIVER===0){//MySQL
-			$memengine=' ENGINE=InnoDB';
+			$memengine=' ENGINE=MEMORY';
 			$diskengine=' ENGINE=InnoDB';
 			$charset=' DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin';
 			$primary='integer PRIMARY KEY AUTO_INCREMENT';
@@ -4183,7 +4321,7 @@ function init_chat(): void
 		$db->exec('CREATE TABLE ' . PREFIX . "ignored (id $primary, ign varchar(50) NOT NULL, ignby varchar(50) NOT NULL)$diskengine$charset;");
 		$db->exec('CREATE INDEX ' . PREFIX . 'ign ON ' . PREFIX . 'ignored(ign);');
 		$db->exec('CREATE INDEX ' . PREFIX . 'ignby ON ' . PREFIX . 'ignored(ignby);');
-		$db->exec('CREATE TABLE ' . PREFIX . "members  (id $primary, nickname varchar(50) NOT NULL UNIQUE, passhash varchar(255) NOT NULL, status smallint NOT NULL, refresh smallint NOT NULL, bgcolour char(6) NOT NULL, regedby varchar(50) DEFAULT '', lastlogin integer DEFAULT 0, loginfails integer unsigned NOT NULL DEFAULT 0, timestamps smallint NOT NULL, embed smallint NOT NULL, incognito smallint NOT NULL, style varchar(255) NOT NULL, nocache smallint NOT NULL, tz varchar(255) NOT NULL, eninbox smallint NOT NULL, sortupdown smallint NOT NULL, hidechatters smallint NOT NULL, nocache_old smallint NOT NULL)$diskengine$charset;");
+		$db->exec('CREATE TABLE ' . PREFIX . "members (id $primary, nickname varchar(50) NOT NULL UNIQUE, passhash varchar(255) NOT NULL, status smallint NOT NULL, refresh smallint NOT NULL, bgcolour char(6) NOT NULL, regedby varchar(50) DEFAULT '', lastlogin integer DEFAULT 0, loginfails integer unsigned NOT NULL DEFAULT 0, timestamps smallint NOT NULL, embed smallint NOT NULL, incognito smallint NOT NULL, style varchar(255) NOT NULL, nocache smallint NOT NULL, tz varchar(255) NOT NULL, eninbox smallint NOT NULL, sortupdown smallint NOT NULL, hidechatters smallint NOT NULL, nocache_old smallint NOT NULL)$diskengine$charset;");
 		$db->exec('CREATE TABLE ' . PREFIX . "inbox (id $primary, postdate integer NOT NULL, postid integer NOT NULL UNIQUE, poster varchar(50) NOT NULL, recipient varchar(50) NOT NULL, text text NOT NULL, FOREIGN KEY (recipient) REFERENCES " . PREFIX . "members(nickname) ON DELETE CASCADE ON UPDATE CASCADE)$diskengine$charset;");
 		$db->exec('CREATE INDEX ' . PREFIX . 'inbox_poster ON ' . PREFIX . 'inbox(poster);');
 		$db->exec('CREATE INDEX ' . PREFIX . 'inbox_recipient ON ' . PREFIX . 'inbox(recipient);');
@@ -4290,8 +4428,7 @@ function init_chat(): void
 			['max_refresh_rate', '150'],
 			['min_refresh_rate', '5'],
 			['postbox_delete_globally', '0'],
-			['allow_js', '0'],
-			
+			['allow_js', '1'],
 		];
 		$stmt=$db->prepare('INSERT INTO ' . PREFIX . 'settings (setting, value) VALUES (?, ?);');
 		foreach($settings as $pair){
@@ -4335,7 +4472,7 @@ function update_db(): void
 	ignore_user_abort(true);
 	set_time_limit(0);
 	if(DBDRIVER===0){//MySQL
-		$memengine=' ENGINE=InnoDB';
+		$memengine=' ENGINE=MEMORY';
 		$diskengine=' ENGINE=InnoDB';
 		$charset=' DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin';
 		$primary='integer PRIMARY KEY AUTO_INCREMENT';
@@ -4442,7 +4579,7 @@ function update_db(): void
 			$memcached->delete(DBNAME . '-' . PREFIX . 'ignored');
 		}
 		if(DBDRIVER===0){//MySQL - previously had a wrong SQL syntax and the captcha table was not created.
-			$db->exec('CREATE TABLE IF NOT EXISTS ' . PREFIX . 'captcha (id integer unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT, time integer unsigned NOT NULL, code char(5) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;');
+			$db->exec('CREATE TABLE IF NOT EXISTS ' . PREFIX . 'captcha (id integer unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT, time integer unsigned NOT NULL, code char(5) NOT NULL) ENGINE=MEMORY DEFAULT CHARSET=utf8 COLLATE=utf8_bin;');
 		}
 	}
 	if($dbversion<15){
@@ -4508,7 +4645,7 @@ function update_db(): void
 		try{
 			$olddb=new PDO('mysql:host=' . DBHOST . ';dbname=' . DBNAME, DBUSER, DBPASS, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_WARNING, PDO::ATTR_PERSISTENT=>PERSISTENT]);
 			$db->exec('DROP TABLE ' . PREFIX . 'captcha;');
-			$db->exec('CREATE TABLE ' . PREFIX . "captcha (id integer PRIMARY KEY AUTO_INCREMENT, time integer NOT NULL, code char(5) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;");
+			$db->exec('CREATE TABLE ' . PREFIX . "captcha (id integer PRIMARY KEY AUTO_INCREMENT, time integer NOT NULL, code char(5) NOT NULL) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;");
 			$result=$olddb->query('SELECT filtermatch, filterreplace, allowinpm, regex, kick, cs FROM ' . PREFIX . 'filter;');
 			$data=$result->fetchAll(PDO::FETCH_NUM);
 			$db->exec('DROP TABLE ' . PREFIX . 'filter;');
@@ -4834,6 +4971,7 @@ function load_fonts() : array {
 		'Poppins'		=>"font-family:'Poppins',sans-serif;",
 	];
 }
+
 function load_lang(): void
 {
 	global $language, $locale, $dir;
@@ -4866,14 +5004,12 @@ function load_lang(): void
 			}
 		}
 	}
-	// Menggunakan $_ENV untuk mengatur locale karena putenv() tidak tersedia
-	$_ENV['LC_ALL'] = $locale;
+	putenv('LC_ALL='.$locale);
 	setlocale(LC_ALL, $locale);
 	bindtextdomain('le-chat-php', __DIR__.'/locale');
 	bind_textdomain_codeset('le-chat-php', 'UTF-8');
 	textdomain('le-chat-php');
 }
-
 
 function load_config(): void
 {
@@ -4883,16 +5019,10 @@ function load_config(): void
 	define('MSGENCRYPTED', true); // Store messages encrypted in the database to prevent other database users from reading them - true/false - visit the setup page after editing!
 	define('ENCRYPTKEY_PASS', '5PcpFOZ+SfuAIU/32XqK/26ZXKsI198qC7DR1HTdjVY='); // Recommended length: 32. Encryption key for messages
 	define('AES_IV_PASS', 'ba94e56f3888507402d5e08484e92cd1'); // Recommended length: 12. AES Encryption IV
-	
-	define('DBHOST', 'localhost'); // Database host
-	define('DBUSER', '8XEdt92Z4NAIIu9CNXCxR58Xet0Ev3C0'); // Database user
-	define('DBPASS', '180406'); // Database password
-	define('DBNAME', '7dt78qxuzbTTlqSOLYdfbJOMLqh1bJBs'); // Database
-	// define('DBHOST', 'localhost'); // Database host
-	// define('DBUSER', 'root'); // Database user
-	// define('DBPASS', '180406'); // Database password
-	// define('DBNAME', 'le_chat_php'); // Database
-	
+	define('DBHOST', 'junction.proxy.rlwy.net:31377'); // Database host
+	define('DBUSER', 'root'); // Database user
+	define('DBPASS', 'oxOyKYUgkqLYsvCWBHWPbVMVBaDFzKgO'); // Database password
+	define('DBNAME', 'railway'); // Database
 	define('PERSISTENT', true); // Use persistent database conection true/false
 	define('PREFIX', ''); // Prefix - Set this to a unique value for every chat, if you have more than 1 chats on the same database or domain - use only alpha-numeric values (A-Z, a-z, 0-9, or _) other symbols might break the queries
 	define('MEMCACHED', false); // Enable/disable memcached caching true/false - needs memcached extension and a memcached server.
