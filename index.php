@@ -485,12 +485,14 @@ function print_end(): void
 
 function credit() : string {
 	return '<small><br><br><a target="_blank" href="https://github.com/0srD4n/DanChat" rel="noreferrer noopener">- DanChat - ' . VERSION . '</a></small>';
+
 }
 
 function meta_html() : string {
 	global $U, $db;
 	$colbg = '000000';
 	$description = '';
+	$out.='<link rel="icon" type="image/x-icon" href="./icon.svg">'; // Tambahkan favicon
 	if(!empty($U['bgcolour'])){
 		$colbg = $U['bgcolour'];
 	}else{
@@ -550,7 +552,7 @@ function print_start(string $class='', int $ref=0, string $url=''): void
 		header("Refresh: $ref; URL=$url");
 	}
 	echo '<!DOCTYPE html><html lang="'.$language.'" dir="'.$dir.'"><head>'.meta_html();
-	echo '<link rel="icon" type="image/x-icon" href="danchat.svg">';
+	echo '<link rel="icon" href="./icon.svg" type="image/svg+xml">';
 	if(!empty($url)){
 		echo "<meta http-equiv=\"Refresh\" content=\"$ref; URL=$url\">";
 	}
@@ -1678,6 +1680,10 @@ function send_frameset(): void
 	send_headers();
 	echo '<!DOCTYPE html><html lang="'.$language.'" dir="'.$dir.'"><head>'.meta_html();
 	echo '<title>'.get_setting('chatname').'</title>';
+	echo '<link rel="icon" href="./icon.svg" type="image/svg+xml">';
+	echo '<audio id="notification_sound" style="display:none">
+		<source src="./music.mp3" type="audio/mpeg">
+	</audio>';
 	print_stylesheet('frameset');
     echo "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">";
     echo "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>";
@@ -2165,6 +2171,44 @@ function view_publicnotes(): void
 	}
 	print_end();
 }
+function send_notification(): void
+{
+	// Fungsi ini akan menangani notifikasi suara ketika user di-tag
+	global $U;
+	print_start('notification');
+	
+	// Tambahkan audio element untuk notifikasi
+	echo '<audio id="notification_sound" style="display:none">
+		<source src="./music.mp3" type="audio/mpeg">
+	</audio>';
+	
+	// Tambahkan script JavaScript untuk memainkan suara
+	echo '<script>
+	function playNotification() {
+		var audio = document.getElementById("notification_sound");
+		audio.play();
+	}
+	
+	// Fungsi untuk memeriksa pesan yang masuk
+	function checkMention(message) {
+		// Cek apakah ada mention untuk user saat ini
+		var mentionPattern = new RegExp("@' . $U['nickname'] . '\\b", "i");
+		if(mentionPattern.test(message)) {
+			playNotification();
+		}
+	}
+	
+	// Tambahkan event listener untuk pesan baru
+	if(typeof(EventSource) !== "undefined") {
+		var source = new EventSource("check_messages.php");
+		source.onmessage = function(event) {
+			checkMention(event.data);
+		};
+	}
+	</script>';
+	
+	print_end();
+}
 
 function send_profile(string $arg=''): void
 {
@@ -2352,6 +2396,7 @@ function send_controls(): void
 			echo '<td>'.form_target('view', 'notes', 'staff').submit(_('Notes')).'</form></td>';
 		}
 	}
+	echo '<td><a href="https://www.buymeacoffee.com/0srd4n" target="_blank"><button type="button" id="donatebutton">'._('Donate Me!').'</button></a></td>';
 	if($publicnotes){
 		echo '<td>'.form_target('view', 'viewpublicnotes').submit(_('View public notes')).'</form></td>';
 	}
@@ -2434,7 +2479,9 @@ function send_login(): void
 	}
 	print_start('login');
 	$englobal=(int) get_setting('englobalpass');
-	echo '<h1 id="chatname">'.get_setting('chatname').'</h1>';
+	echo '<div id="judul-title">';
+	echo '<h1 id="chatname" class="cyber-glitch-title" data-text="'.get_setting('chatname').'">'.get_setting('chatname').'</h1>';
+	echo '</div>';
 	echo form_target('_parent', 'login');
 	if($englobal===1 && isset($_POST['globalpass'])){
 		echo hidden('globalpass', htmlspecialchars($_POST['globalpass']));
@@ -2472,6 +2519,7 @@ function send_login(): void
 	}
 	echo '<h4 id="system_protocols">SYSTEM PROTOCOLS</h4>';
 	echo '<p id="rules_text">'._('No CP - No Spamming - No Gore/other illegal activity').'</p>';
+	echo '<span id="createdby">'._('Made With ❤️ By  ').'</span>'._("<strong style='color: #ff0000;'>XplDan</strong>");
 	echo '<div id="changelang">';
 	echo '<div id="lang_label">'._('Select System Language').'</div>';
 	echo '<div id="lang_grid">';
@@ -2517,7 +2565,7 @@ function print_notifications(): void
 {
 	global $U, $db;
 	if($temp && $temp[0]>0){
-		echo '<p align="middle">' . $temp[0] . "&nbsp;" . _('Failed login attempt(s) You are imposter!') . "</p>";
+		echo '<p align="middle">' . $temp[0] . "&nbsp;" . _('Failed login attempt(s) %s') . "</p>";
 	}
 	if($U['status']>=2 && $U['eninbox']!=0){
 		$stmt=$db->prepare('SELECT COUNT(*) FROM ' . PREFIX . 'inbox WHERE recipient=?;');
@@ -2732,7 +2780,7 @@ function show_fails(): void
 	$temp=$stmt->fetch(PDO::FETCH_NUM);
 	if($temp && $temp[0]>0){
 		print_start('failednotice');
-		echo $temp[0] . "&nbsp;" . _('Failed login attempt(s) You are imposter!') . "<br>";
+		echo $temp[0] . "&nbsp;" . _('Failed login attempt(s) ') . "<br>" . "you need change your password" . "<br>";
 		$stmt=$db->prepare('UPDATE ' . PREFIX . 'members SET loginfails=? WHERE nickname=?;');
 		$stmt->execute([0, $U['nickname']]);
 		echo form_target('_self', 'login').submit(_('Dismiss')).'</form></td>';
@@ -2976,7 +3024,7 @@ function check_member(string $password) : bool {
 		}else{
 			$stmt=$db->prepare('UPDATE ' . PREFIX . 'members SET loginfails=? WHERE nickname=?;');
 			$stmt->execute([$temp['loginfails']+1, $temp['nickname']]);
-			send_error(_('This nickname is a registered member.')."<br>"._('Wrong Password!'));
+			send_error(_('This nickname is a registered member.')."<br>"._('Wrong Password!')."<br>"._('You are Imposter?'));
 		}
 	}
 	return false;
@@ -3308,7 +3356,6 @@ function add_user_defaults(string $password): void
 	$U['exiting']=0;
 }
 
-// message handling
 
 function validate_input() : string {
 	global $U, $db;
@@ -4888,6 +4935,8 @@ function load_config(): void
 	define('DBUSER', '8XEdt92Z4NAIIu9CNXCxR58Xet0Ev3C0'); // Database user
 	define('DBPASS', '180406'); // Database password
 	define('DBNAME', '7dt78qxuzbTTlqSOLYdfbJOMLqh1bJBs'); // Database
+
+// #testing user
 	// define('DBHOST', 'localhost'); // Database host
 	// define('DBUSER', 'root'); // Database user
 	// define('DBPASS', '180406'); // Database password
@@ -4924,4 +4973,5 @@ function load_config(): void
 	}
 	define('RESET_SUPERADMIN_PASSWORD', ''); //Use this to reset your superadmin password in case you forgot it
 }
+
 

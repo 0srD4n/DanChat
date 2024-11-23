@@ -29,8 +29,9 @@ body, iframe {
     padding-left: 10px;
 }
 #about-style {
-    color: green;
+    color: rgb(0, 255, 0);
     font-weight: bold;
+    font-size: 14px;
     padding-left: 10px;
 }
 #topic {
@@ -155,6 +156,7 @@ input[type=text], input[type=password], input[type=submit], select, textarea {
   background-size: cover;
   background-position: center;
   background-blend-mode: overlay;
+  padding: 0;
   position: relative;
   z-index: 1;
 }
@@ -174,7 +176,8 @@ input[type=text], input[type=password], input[type=submit], select, textarea {
 #login_table {
   background: rgba(0,20,20,0.8);
 backdrop-filter: blur(10px);
-  padding:40px;
+  padding:30px;
+  padding-top: 10px;
   border-radius: 10px;
   box-shadow: 0 0 20px rgba(0,255,0,0.2);
   border: 1px solid rgba(0,255,0,0.1);
@@ -225,7 +228,7 @@ backdrop-filter: blur(10px);
 #submit_btn {
   width: 100%;
   padding: 12px;
-  background: linear-gradient(45deg, #003300, #006600);
+  background: linear-gradient(45deg, #330000, #006600);
   color: #00ff00;
   border: 1px solid #00ff00;
   font-family: 'Courier New', monospace;
@@ -237,13 +240,13 @@ backdrop-filter: blur(10px);
 
 #submit_button:hover,
 #submit_btn:hover {
-  background: linear-gradient(45deg, #006600, #009900);
-  box-shadow: 0 0 20px rgba(0,255,0,0.4);
+  background: linear-gradient(45deg, #b90404, #990000);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
   transform: scale(1.02);
 }
 
 /* Style untuk judul */
-#chatname {
+/* #chatname {
   background: linear-gradient(120deg, #2a2a2a, #3a3a3a, #2a2a2a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -266,23 +269,102 @@ backdrop-filter: blur(10px);
   height: 2px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.342), transparent);
   margin: 10px auto 0;
+} */
+/* Berikut adalah kode CSS yang menambahkan animasi glitch pada elemen dengan ID `#chatname`. Animasi ini memberikan tampilan modern dan siber yang kompleks namun tetap mudah dibaca oleh pengunjung. */
+.cyber-glitch-title {
+    font-family: "Fira Code", monospace; /* Menggunakan font yang sesuai untuk tema dark web hacker */
+    font-weight: 900; /* Membuat font tebal untuk memberikan kesan kuat */
+    font-size: 1.5em; /* Membuat ukuran font lebih besar untuk meningkatkan visibilitas */
+    position: relative; /* Mengatur posisi relatif untuk memungkinkan penggunaan pseudo-element */
+    text-align: center; /* Mengatur teks agar terlihat di tengah */
+    color: #00ff00; /* Menggunakan warna hijau neon untuk memberikan kesan futuristik */
+    text-shadow: 0 0 20px rgba(0,255,0,0.9), 0 0 25px rgba(0,255,0,0.8); /* Menambahkan bayangan teks untuk memberikan kesan dalam */
+    padding: 15px; /* Membuat padding lebih besar untuk meningkatkan kesan visual */
+    animation: cyberPulse 3s infinite; /* Menggunakan animasi untuk memberikan kesan berdenyut */
+    overflow: hidden; /* Mengatur overflow untuk mencegah konten lainnya terlihat */
+    margin: 30px auto; /* Menggunakan margin auto untuk memusatkan elemen */
+    border-radius: 10px; /* Mengatur border-radius untuk memberikan kesan sudut yang lebih halus */
+    letter-spacing: 4px; /* Membuat jarak antar huruf lebih besar untuk meningkatkan kesan visual */
+    max-width: 20%; /* Membatasi lebar maksimum */
+    box-sizing: border-box; /* Memastikan padding termasuk dalam perhitungan lebar */
 }
 
-/* Style untuk rules section */
-#rules {
-  background: rgba(0,20,20,0.6);
-  padding: 20px;
-  border-radius: 5px;
-  border: 1px solid rgb(255, 0, 0);
-  margin-top: 30px;
-  animation: fadeIn 1.5s ease-out;
+.cyber-glitch-title::before,
+.cyber-glitch-title::after {
+    content: attr(data-text); /* Menggunakan atribut data-text untuk mengisi konten */
+    position: absolute; /* Mengatur posisi absolute untuk mengatur posisi pseudo-element */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(60deg, transparent, #000000, transparent); /* Menggunakan latar belakang transparan untuk menghilangkan kesan gelap */
+    padding: 15px; /* Membuat padding untuk meningkatkan kesan visual */
+    overflow: hidden; /* Mengatur overflow untuk mencegah konten lainnya terlihat */
+    box-sizing: border-box; /* Memastikan padding termasuk dalam perhitungan lebar */
 }
 
-#rules_title {
-  color: #ff0000;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  text-align: center;
+.cyber-glitch-title::before {
+    left: 3px; /* Mengatur posisi kiri untuk memberikan kesan glitch */
+    text-shadow: -3px 0 #ff0000; /* Menggunakan bayangan teks untuk memberikan kesan glitch */
+    clip: rect(24px, 550px, 90px, 0); /* Mengatur clip untuk memberikan kesan glitch */
+    animation: cyberGlitch 3s infinite linear alternate-reverse; /* Menggunakan animasi untuk memberikan kesan glitch */
+}
+
+.cyber-glitch-title::after {
+    left: -3px; /* Mengatur posisi kiri untuk memberikan kesan glitch */
+    text-shadow: 3px 0 #0000ff; /* Menggunakan bayangan teks untuk memberikan kesan glitch */
+    clip: rect(85px, 550px, 140px, 0); /* Mengatur clip untuk memberikan kesan glitch */
+    animation: cyberGlitch2 2.5s infinite linear alternate-reverse; /* Menggunakan animasi untuk memberikan kesan glitch */
+}
+
+@keyframes cyberGlitch {
+    0% {
+        clip: rect(40px, 9999px, 50px, 0);
+        transform: skew(0.4deg);
+    }
+    20% {
+        clip: rect(15px, 9999px, 60px, 0);
+        transform: skew(0.3deg);
+    }
+    40% {
+        clip: rect(50px, 9999px, 30px, 0);
+        transform: skew(0.7deg);
+    }
+    60% {
+        clip: rect(40px, 9999px, 70px, 0);
+        transform: skew(0.2deg);
+    }
+    80% {
+        clip: rect(60px, 9999px, 20px, 0);
+        transform: skew(0.4deg);
+    }
+    100% {
+        clip: rect(30px, 9999px, 50px, 0);
+        transform: skew(0.5deg);
+    }
+}
+
+@keyframes cyberGlitch2 {
+    0% {
+        clip: rect(20px, 9999px, 100px, 0);
+        transform: skew(-0.4deg);
+    }
+    25% {
+        clip: rect(70px, 9999px, 15px, 0);
+        transform: skew(-0.5deg);
+    }
+    50% {
+        clip: rect(80px, 9999px, 30px, 0);
+        transform: skew(-0.7deg);
+    }
+    75% {
+        clip: rect(60px, 9999px, 80px, 0);
+        transform: skew(-0.3deg);
+    }
+    100% {
+        clip: rect(15px, 9999px, 40px, 0);
+        transform: skew(-0.4deg);
+    }
 }
 #system_protocols {
   font-family: 'Courier New', monospace;
@@ -323,10 +405,22 @@ backdrop-filter: blur(10px);
   100% { clip: rect(0, 900px, 0, 0); }
 }
 
+.cyber-glitch-title::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: calc(100% + 10px);
+    height: calc(100% + 10px);
+    border-radius: 10px;
+}
+
+
 #rules_text {
   color: #ff0000;
   font-family: 'Courier New', monospace;
   line-height: 1.6;
+  font-size: 14px;
   text-align: center;
   font-weight: bolder;
 }
@@ -348,4 +442,23 @@ height: 30%;
   font-family: 'Courier New', monospace;
   cursor: pointer;
 }
-
+#chatters {
+  padding: 10px;
+  width: auto;
+  margin-top: 10px;
+  display: block;
+}
+#chatters a {
+  color:white;
+}
+.controls #donatebutton {
+  background-color: #e5ff00;
+  color: #000000;
+  border: 1px solid #d9ff00;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+}
+td#color_label {
+  color: #00ff00;
+  padding: 10px;
+}
