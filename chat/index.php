@@ -4999,11 +4999,15 @@ function load_config(): void
 	define('ENCRYPTKEY_PASS', '5PcpFOZ+SfuAIU/32XqK/26ZXKsI198qC7DR1HTdjVY='); // Recommended length: 32. Encryption key for messages
 	define('AES_IV_PASS', 'ba94e56f3888507402d5e08484e92cd1'); // Recommended length: 12. AES Encryption IV
 	
-	define('DBHOST', 'localhost'); // Database host
-	define('DBUSER', '8XEdt92Z4NAIIu9CNXCxR58Xet0Ev3C0'); // Database user
-	define('DBPASS', '180406'); // Database password
-	define('DBNAME', '7dt78qxuzbTTlqSOLYdfbJOMLqh1bJBs'); // Database
-
+// 	define('DBHOST', 'localhost'); // Database host
+// 	define('DBUSER', '8XEdt92Z4NAIIu9CNXCxR58Xet0Ev3C0'); // Database user
+// //	define('DBPASS', '180406'); // Database password
+// //	define('DBNAME', '7dt78qxuzbTTlqSOLYdfbJOMLqh1bJBs'); // Database
+	define('DBHOST', ''); // Database host
+	define('DBUSER', ''); // Database user
+	define('DBPASS', ''); // Database password
+	define('DBNAME', ''); // Database
+	
 #testing user
 	// define('DBHOST', 'localhost'); // Database host
 	// define('DBUSER', 'root'); // Database user
