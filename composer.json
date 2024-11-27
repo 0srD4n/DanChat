@@ -1,26 +1,7 @@
 {
- "name": "danchat",
-    "description": "A brief description of your project",
-    "require": {
-        "php": "^8.0",
-        "ext-intl": "*",
-        "ext-gettext": "*",
-        "ext-pdo": "*",
-        "ext-pcre": "*",
-        "ext-mbstring": "*",
-        "ext-date": "*",
-        "ext-pdo_sqlite": "*",
-        "ext-pdo_mysql": "*",
-        "ext-pdo_pgsql": "*",
-        "ext-gd": "*",
-        "ext-json": "*",
-        "ext-memcached": "*",
-        "ext-sodium": "*"
-    },
-    "scripts": {
-        "post-install-cmd": [
-            "php -r \"echo 'Dependencies installed successfully!\\n';\""
-        ]
-    }
+...
+  "require": {
+    "php": "^8.2"
+  }
+...
 }
-
