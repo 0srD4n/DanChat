@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: danchat-app
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /
