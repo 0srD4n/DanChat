@@ -1,7 +1,13 @@
 {
-...
   "require": {
-    "php": "^8.2"
-  }
-...
+    "php": "^8.2",
+        "ext-pdo": "*",
+        "ext-mbstring": "*",
+        "ext-pdo_mysql": "*",
+        "ext-intl": "*",
+        "ext-gd": "*",
+        "ext-json": "*",
+        "ext-pdo_pgsql": "*"
+    }
+
 }
