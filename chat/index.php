@@ -57,6 +57,8 @@ cron();
 route();
 
 //  main program: decide what to do based on queries
+
+
 function route(): void
 {
 	global $U, $db;
@@ -246,10 +248,81 @@ function route_admin() : string {
 		}
 	}elseif($_POST['do']==='passreset'){
 		return passreset($_POST['name'], $_POST['pass']);
+	}elseif($_POST['do']==='add_word' && isset($_POST['new_word'])) {
+		return add_bad_word($_POST['new_word']);
+	}elseif($_POST['do']==='delete_word' && isset($_POST['word_id'])) {
+		return delete_bad_word((int)$_POST['word_id']);
 	}
 	return '';
 }
+function delete_bad_word(int $word_id): string {
+    global $db;
+    
+    try {
+        // Delete the word
+        $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'bad_words WHERE id = ?');
+        $stmt->execute([$word_id]);
+        
+        if($stmt->rowCount() > 0) {
+            return '<span style="color:red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad Name deleted successfully') . '</span>';
+        } else {
+            return '<span style="color: red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad Name not found') . '</span>';
+        }
 
+    } catch (PDOException $e) {
+        error_log("Error deleting bad name ID $word_id: " . $e->getMessage());
+        return _('Error deleting bad name');
+    }
+}
+function add_bad_word(string $word): string {
+    global $db;
+    
+    // Input validation
+    $word = trim($word);
+    if (empty($word)) {
+        return _('Word cannot be empty');
+    }
+    
+    if (mb_strlen($word) > 255) { // Match VARCHAR(255) limit
+        return _('Word is too long (maximum 255 characters)');
+    }
+    
+    try {
+        // Check for duplicates first
+        $stmt = $db->prepare('SELECT COUNT(*) FROM ' . PREFIX . 'bad_words WHERE word = ?');
+        $stmt->execute([$word]);
+        if ($stmt->fetchColumn() > 0) {
+            return _('Word already exists in bad words list');
+        }
+        
+        // Create table if not exists
+        $db->exec('CREATE TABLE IF NOT EXISTS ' . PREFIX . 'bad_words (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            word VARCHAR(255) NOT NULL UNIQUE
+        )');
+        
+        // Insert new word with error handling
+        try {
+            $stmt = $db->prepare('INSERT INTO ' . PREFIX . 'bad_words (word) VALUES (?)');
+            $stmt->execute([$word]);
+            
+            if($stmt->rowCount() > 0) {
+                return '<span style="color:red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad name added successfully') . '</span>';
+            } else {
+                return '<span style="color: red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Failed to add bad name') . '</span>';
+            }
+        } catch (PDOException $e) {
+            // Log specific insert error
+            error_log("Failed to insert bad word: " . $e->getMessage());
+            return _('Error adding bad word - please try again');
+        }
+        
+    } catch (PDOException $e) {
+        // Log any other database errors
+        error_log("Database error while adding bad word: " . $e->getMessage());
+        return _('Database error - please contact administrator');
+    }
+}	
 function route_setup(): void
 {
 	global $U;
@@ -1180,13 +1253,14 @@ function send_admin(string $arg): void
 		}
 	}
 	$chlist.='</select>';
+	echo '<div class="admin-panel">';
 	echo '<h2>'._('Administrative functions')."</h2><i>$arg</i><table>";
 	if($U['status']>=7){
 		thr();
 		echo '<tr><td>'.form_target('view', 'setup').submit(_('Go to the Setup-Page')).'</form></td></tr>';
 	}
 	thr();
-	echo '<tr><td><table id="clean"><tr><th>'._('Clean messages').'</th><td>';
+	echo '<tr><td><div class="admin-section"><h2>'._('Clean messages').'</h2>';
 	echo form('admin', 'clean');
 	echo '<table><tr><td><label><input type="radio" name="what" id="room" value="room">';
 	echo _('Whole room').'</label></td><td>&nbsp;</td><td><label><input type="radio" name="what" id="choose" value="choose" checked>';
@@ -1198,32 +1272,32 @@ function send_admin(string $arg): void
 		echo '<option value="'.htmlspecialchars($nick[0]).'">'.htmlspecialchars($nick[0]).'</option>';
 	}
 	echo '</select></td><td>';
-	echo submit(_('Clean'), 'class="delbutton"').'</td></tr></table></form></td></tr></table></td></tr>';
+	echo submit(_('Clean'), 'class="delbutton"').'</td></tr></table></form></div></td></tr>';
 	thr();
-	echo '<tr><td><table id="kick"><tr><th>'.sprintf(_('Kick Chatter (%d minutes)'), get_setting('kickpenalty')).'</th></tr><tr><td>';
+	echo '<tr><td><div class="admin-section"><h2>'.sprintf(_('Kick Chatter (%d minutes)'), get_setting('kickpenalty')).'</h2>';
 	echo form('admin', 'kick');
 	echo '<table><tr><td>'._('Kickmessage:').'</td><td><input type="text" name="kickmessage" size="30"></td><td>&nbsp;</td></tr>';
 	echo '<tr><td><label><input type="checkbox" name="what" value="purge" id="purge">'._('Purge messages').'</label></td><td>'.$chlist.'</td><td>';
-	echo submit(_('Kick')).'</td></tr></table></form></td></tr></table></td></tr>';
+	echo submit(_('Kick')).'</td></tr></table></form></div></td></tr>';
 	thr();
-	echo '<tr><td><table id="logout"><tr><th>'._('Logout inactive Chatter').'</th><td>';
+	echo '<tr><td><div class="admin-section"><h2>'._('Logout inactive Chatter').'</h2>';
 	echo form('admin', 'logout');
 	echo "<table><tr><td>$chlist</td><td>";
-	echo submit(_('Logout')).'</td></tr></table></form></td></tr></table></td></tr>';
+	echo submit(_('Logout')).'</td></tr></table></form></div></td></tr>';
 	$views=['sessions' => _('View active sessions'), 'filter' => _('Filter'), 'linkfilter' => _('Linkfilter')];
 	foreach($views as $view => $title){
 		thr();
-		echo "<tr><td><table id=\"$view\"><tr><th>".$title.'</th><td>';
+		echo "<tr><td><div class=\"admin-section\"><h2>".$title.'</h2>';
 		echo form('admin', $view);
-		echo submit(_('View')).'</form></td></tr></table></td></tr>';
+		echo submit(_('View')).'</form></div></td></tr>';
 	}
 	thr();
-	echo '<tr><td><table id="topic"><tr><th>'._('Topic').'</th><td>';
+	echo '<tr><td><div class="admin-section"><h2>'._('Topic').'</h2>';
 	echo form('admin', 'topic');
 	echo '<table><tr><td><input type="text" name="topic" size="20" value="'.get_setting('topic').'"></td><td>';
-	echo submit(_('Change')).'</td></tr></table></form></td></tr></table></td></tr>';
+	echo submit(_('Change')).'</td></tr></table></form></div></td></tr>';
 	thr();
-	echo '<tr><td><table id="guestaccess"><tr><th>'._('Change Guestaccess').'</th><td>';
+	echo '<tr><td><div class="admin-section"><h2>'._('Change Guestaccess').'</h2>';
 	echo form('admin', 'guestaccess');
 	echo '<table>';
 	echo '<tr><td><select name="guestaccess">';
@@ -1251,10 +1325,10 @@ function send_admin(string $arg): void
 		echo '<option value="4" selected';
 		echo '>'._('Disable chat').'</option>';
 	}
-	echo '</select></td><td>'.submit(_('Change')).'</td></tr></table></form></td></tr></table></td></tr>';
+	echo '</select></td><td>'.submit(_('Change')).'</td></tr></table></form></div></td></tr>';
 	thr();
 	if(get_setting('suguests')){
-		echo '<tr><td><table id="suguests"><tr><th>'._('Register applicant').'</th><td>';
+		echo '<tr><td><div class="admin-section"><h2>'._('Register applicant').'</h2>';
 		echo form('admin', 'superguest');
 		echo '<table><tr><td><select name="name" size="1"><option value="">'._('(choose)').'</option>';
 		foreach($users as $user){
@@ -1262,11 +1336,11 @@ function send_admin(string $arg): void
 				echo "<option value=\"$user[0]\" style=\"$user[1]\">$user[0]</option>";
 			}
 		}
-		echo '</select></td><td>'.submit(_('Register')).'</td></tr></table></form></td></tr></table></td></tr>';
+		echo '</select></td><td>'.submit(_('Register')).'</td></tr></table></form></div></td></tr>';
 		thr();
 	}
 	if($U['status']>=7){
-		echo '<tr><td><table id="status"><tr><th>'._('Members').'</th><td>';
+		echo '<tr><td><div class="admin-section"><h2>'._('Members').'</h2>';
 		echo form('admin', 'status');
 		echo '<table><tr><td><select name="name" size="1"><option value="">'._('(choose)').'</option>';
 		$members=[];
@@ -1302,17 +1376,17 @@ function send_admin(string $arg): void
 		if($U['status']>=8){
 			echo '<option value="7">'._('Set to admin (A)').'</option>';
 		}
-		echo '</select></td><td>'.submit(_('Change')).'</td></tr></table></form></td></tr></table></td></tr>';
+		echo '</select></td><td>'.submit(_('Change')).'</td></tr></table></form></div></td></tr>';
 		thr();
-		echo '<tr><td><table id="passreset"><tr><th>'._('Reset password').'</th><td>';
+		echo '<tr><td><div class="admin-section"><h2>'._('Reset password').'</h2>';
 		echo form('admin', 'passreset');
 		echo '<table><tr><td><select name="name" size="1"><option value="">'._('(choose)').'</option>';
 		foreach($members as $member){
 			echo "<option value=\"$member[0]\" style=\"$member[1]\">$member[0]</option>";
 		}
-		echo '</select></td><td><input type="password" name="pass" autocomplete="off"></td><td>'.submit(_('Change')).'</td></tr></table></form></td></tr></table></td></tr>';
+		echo '</select></td><td><input type="password" name="pass" autocomplete="off"></td><td>'.submit(_('Change')).'</td></tr></table></form></div></td></tr>';
 		thr();
-		echo '<tr><td><table id="register"><tr><th>'._('Register Guest').'</th><td>';
+		echo '<tr><td><div class="admin-section"><h2>'._('Register Guest').'</h2>';
 		echo form('admin', 'register');
 		echo '<table><tr><td><select name="name" size="1"><option value="">'._('(choose)').'</option>';
 		foreach($users as $user){
@@ -1320,17 +1394,76 @@ function send_admin(string $arg): void
 				echo "<option value=\"$user[0]\" style=\"$user[1]\">$user[0]</option>";
 			}
 		}
-		echo '</select></td><td>'.submit(_('Register')).'</td></tr></table></form></td></tr></table></td></tr>';
+		echo '</select></td><td>'.submit(_('Register')).'</td></tr></table></form></div></td></tr>';
 		thr();
-		echo '<tr><td><table id="regnew"><tr><th>'._('Register new Member').'</th></tr><tr><td>';
+		echo '<tr><td><div class="admin-section"><h2>'._('Register new Member').'</h2>';
 		echo form('admin', 'regnew');
 		echo '<table><tr><td>'._('Nickname:').'</td><td>&nbsp;</td><td><input type="text" name="name" size="20"></td><td>&nbsp;</td></tr>';
 		echo '<tr><td>'._('Password:').'</td><td>&nbsp;</td><td><input type="password" name="pass" size="20" autocomplete="off"></td><td>';
-		echo submit(_('Register')).'</td></tr></table></form></td></tr></table></td></tr>';
+		echo submit(_('Register')).'</td></tr></table></form></div></td></tr>';
 		thr();
 	}
+	// Handle bad words management
+	// Create bad_words table if not exists
+	$db->exec('CREATE TABLE IF NOT EXISTS ' . PREFIX . 'bad_words (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		word VARCHAR(255) NOT NULL UNIQUE
+	)');
+
+	// Display bad words management form
+	echo '<tr><td><div class="admin-section"><h2>'._('Manage Bad Name').'</h2>';
+	
+	// Add new word form
+	echo form('admin', 'add_word');
+	echo '<table><tr>';
+	echo '<td><input type="text" name="new_word" placeholder="'._('Add new bad word').'" maxlength="255" required /></td>';
+	echo '<td><input type="submit" value="'._('Add').'" class="btn btn-primary" /></td>';
+	echo '</tr></table>';
+	echo '</form>';
+
+	// Display status message if exists
+	if (isset($_SESSION['bad_word_status'])) {
+		echo '<div class="status-message">';
+		echo htmlspecialchars($_SESSION['bad_word_status']);
+		echo '</div>';
+		unset($_SESSION['bad_word_status']);
+	}
+
+	// Table header for bad words list  
+	echo '<table class="badwords-table">';
+	echo '<tr>';
+	echo '<th>'._('No').'</th>';
+	echo '<th>'._('Bad Name').'</th>';
+	echo '<th>'._('Action').'</th>';
+	echo '</tr>';
+
+	try {
+		// Display existing bad words in table
+		$stmt = $db->query('SELECT id, word FROM ' . PREFIX . 'bad_words ORDER BY word ASC');
+		$number = 1;
+		while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			echo '<tr>';
+			echo '<td>' . $number . '</td>';
+			echo '<td>' . htmlspecialchars($row['word']) . '</td>';
+			echo '<td>';
+			echo form('admin', 'delete_word');
+			echo '<input type="hidden" name="word_id" value="' . $row['id'] . '"/>';
+			echo '<input type="submit" value="'._('Delete').'" class="btn btn-danger" onclick="return confirm(\''._('Are you sure you want to delete this word?').'\')"/>';
+			echo '</form>';
+			echo '</td>';
+			echo '</tr>';
+			$number++;
+		}
+	} catch (PDOException $e) {
+		error_log("Error fetching bad words: " . $e->getMessage());
+		echo '<tr><td colspan="3">'._('Error loading bad words list').'</td></tr>';
+	}
+	
+	echo '</table></div></td></tr>';
+	thr();
 	echo "</table><br>";
 	echo form('admin').submit(_('Reload')).'</form>';
+	echo '</div>';
 	print_end();
 }
 
@@ -1636,7 +1769,6 @@ function send_linkfilter(string $arg=''): void
 	echo form('admin', 'linkfilter').submit(_('Reload')).'</form>';
 	print_end();
 }
-
 function send_frameset(): void
 {
 	global $U, $db, $language, $dir;
@@ -1650,6 +1782,18 @@ function send_frameset(): void
     echo "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">";
     echo "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>";
 	echo '</head><body>';
+	
+	// Add navbar
+	echo "<div id=\"navbar\">";
+	echo '<span>'._("comming soon navbar").'</span>';
+	// echo "<a href=\"$_SERVER[SCRIPT_NAME]?action=view&session=$U[session]&lang=$language\">Home</a>";
+	// echo "<a href=\"$_SERVER[SCRIPT_NAME]?action=profile&session=$U[session]&lang=$language\">Profile</a>";
+	// if($U['status'] >= 5) {
+	// 	echo "<a href=\"$_SERVER[SCRIPT_NAME]?action=admin&session=$U[session]&lang=$language\">Admin</a>";
+	// }
+	// echo "<a href=\"$_SERVER[SCRIPT_NAME]?action=logout&session=$U[session]&lang=$language\">Logout</a>";
+	echo "</div>";
+
 	if(isset($_POST['sort'])){
 		if($_POST['sort']==1){
 			$U['sortupdown']=1;
@@ -1683,10 +1827,26 @@ function send_frameset(): void
 		$action_top='controls';
 		$action_bot='post';
 		$sort_bot='';
-		}
-	echo "<div id=\"frameset-mid\"><iframe name=\"view\" src=\"$_SERVER[SCRIPT_NAME]?action=$action_mid&session=$U[session]&lang=$language$bottom\">".noframe_html()."</iframe></div>";
-	echo "<div id=\"frameset-top\"><iframe name=\"$action_top\" src=\"$_SERVER[SCRIPT_NAME]?action=$action_top&session=$U[session]&lang=$language\">".noframe_html()."</iframe></div>";
-	echo "<div id=\"frameset-bot\"><iframe name=\"$action_bot\" src=\"$_SERVER[SCRIPT_NAME]?action=$action_bot&session=$U[session]&lang=$language$sort_bot\">".noframe_html()."</iframe></div>";
+	}
+	
+	// Build common URL parameters
+	$base_url = "$_SERVER[SCRIPT_NAME]?session=$U[session]&lang=$language";
+	
+	echo "<div id=\"frameset-mid\">";
+	echo "<iframe name=\"view\" src=\"$base_url&action=$action_mid$bottom\">";
+	echo noframe_html(); 
+	echo "</iframe></div>";
+	
+	echo "<div id=\"frameset-top\">";
+	echo "<iframe name=\"$action_top\" src=\"$base_url&action=$action_top\">";
+	echo noframe_html();
+	echo "</iframe></div>";
+	
+	echo "<div id=\"frameset-bot\">";
+	echo "<iframe name=\"$action_bot\" src=\"$base_url&action=$action_bot$sort_bot\">";
+	echo noframe_html();
+	echo "</iframe></div>";
+	
 	echo '</body></html>';
 	exit;
 }
@@ -2186,7 +2346,7 @@ function send_profile(string $arg=''): void
 {
 	global $U, $db, $language;
 	print_start('profile');
-	echo form('profile', 'save').'<h2>'._('Your Profile')."</h2><i>$arg</i><table>";
+	echo form('profile', 'save').'<h2 class="cyber-title">'._('Your Profile')."</h2><i class=\"cyber-alert\">$arg</i><table class=\"cyber-table\">";
 	thr();
 	$ignored=[];
 	$stmt=$db->prepare('SELECT ign FROM ' . PREFIX . 'ignored WHERE ignby=? ORDER BY LOWER(ign);');
@@ -2195,16 +2355,16 @@ function send_profile(string $arg=''): void
 		$ignored[]=htmlspecialchars($tmp['ign']);
 	}
 	if(count($ignored)>0){
-		echo '<tr><td><table id="unignore"><tr><th>'._("Don't ignore anymore").'</th><td>';
-		echo '<select name="unignore" size="1"><option value="">'._('(choose)').'</option>';
+		echo '<tr><td><table id="unignore" class="cyber-inner-table"><tr><th class="cyber-header">'._("Don't ignore anymore").'</th><td>';
+		echo '<select name="unignore" class="cyber-select" size="1"><option value="">'._('(choose)').'</option>';
 		foreach($ignored as $ign){
 			echo "<option value=\"$ign\">$ign</option>";
 		}
 		echo '</select></td></tr></table></td></tr>';
 		thr();
 	}
-	echo '<tr><td><table id="ignore"><tr><th>'._('Ignore').'</th><td>';
-	echo '<select name="ignore" size="1"><option value="">'._('(choose)').'</option>';
+	echo '<tr><td><table id="ignore" class="cyber-inner-table"><tr><th class="cyber-header">'._('Ignore').'</th><td>';
+	echo '<select name="ignore" class="cyber-select" size="1"><option value="">'._('(choose)').'</option>';
 	$stmt=$db->prepare('SELECT DISTINCT poster, style FROM ' . PREFIX . 'messages INNER JOIN (SELECT nickname, style FROM ' . PREFIX . 'sessions UNION SELECT nickname, style FROM ' . PREFIX . 'members) AS t ON (' . PREFIX . 'messages.poster=t.nickname) WHERE poster!=? AND poster NOT IN (SELECT ign FROM ' . PREFIX . 'ignored WHERE ignby=?) ORDER BY LOWER(poster);');
 	$stmt->execute([$U['nickname'], $U['nickname']]);
 	while($nick=$stmt->fetch(PDO::FETCH_NUM)){
@@ -2214,19 +2374,19 @@ function send_profile(string $arg=''): void
 	thr();
 	$max_refresh_rate = get_setting('max_refresh_rate');
 	$min_refresh_rate = get_setting('min_refresh_rate');
-	echo '<tr><td><table id="refresh"><tr><th>'.sprintf(_('Refresh rate (%1$d-%2$d seconds)'), $min_refresh_rate, $max_refresh_rate).'</th><td>';
-	echo '<input type="number" name="refresh" size="3" min="'.$min_refresh_rate.'" max="'.$max_refresh_rate.'" value="'.$U['refresh'].'"></td></tr></table></td></tr>';
+	echo '<tr><td><table id="refresh" class="cyber-inner-table"><tr><th class="cyber-header">'.sprintf(_('Refresh rate (%1$d-%2$d seconds)'), $min_refresh_rate, $max_refresh_rate).'</th><td>';
+	echo '<input type="number" name="refresh" class="cyber-input" size="3" min="'.$min_refresh_rate.'" max="'.$max_refresh_rate.'" value="'.$U['refresh'].'"></td></tr></table></td></tr>';
 	thr();
 	preg_match('/#([0-9a-f]{6})/i', $U['style'], $matches);
-	echo '<tr><td><table id="colour"><tr><th>'._('Font colour')." (<a href=\"$_SERVER[SCRIPT_NAME]?action=colours&amp;session=$U[session]&amp;lang=$language\" target=\"view\">"._('View examples').'</a>)</th><td>';
-	echo "<input type=\"color\" value=\"#$matches[1]\" name=\"colour\"></td></tr></table></td></tr>";
+	echo '<tr><td><table id="colour" class="cyber-inner-table"><tr><th class="cyber-header">'._('Font colour')." (<a href=\"$_SERVER[SCRIPT_NAME]?action=colours&amp;session=$U[session]&amp;lang=$language\" target=\"view\" class=\"cyber-link\">"._('View examples').'</a>)</th><td>';
+	echo "<input type=\"color\" value=\"#$matches[1]\" name=\"colour\" class=\"cyber-color\"></td></tr></table></td></tr>";
 	thr();
-	echo '<tr><td><table id="bgcolour"><tr><th>'._('Background colour')." (<a href=\"$_SERVER[SCRIPT_NAME]?action=colours&amp;session=$U[session]&amp;lang=$language\" target=\"view\">"._('View examples').'</a>)</th><td>';
-	echo "<input type=\"color\" value=\"#$U[bgcolour]\" name=\"bgcolour\"></td></tr></table></td></tr>";
+	echo '<tr><td><table id="bgcolour" class="cyber-inner-table"><tr><th class="cyber-header">'._('Background colour')." (<a href=\"$_SERVER[SCRIPT_NAME]?action=colours&amp;session=$U[session]&amp;lang=$language\" target=\"view\" class=\"cyber-link\">"._('View examples').'</a>)</th><td>';
+	echo "<input type=\"color\" value=\"#$U[bgcolour]\" name=\"bgcolour\" class=\"cyber-color\"></td></tr></table></td></tr>";
 	thr();
 	if($U['status']>=3){
-		echo '<tr><td><table id="font"><tr><th>'._('Fontface').'</th><td><table>';
-		echo '<tr><td>&nbsp;</td><td><select name="font" size="1"><option value="">* '._('Room Default').' *</option>';
+		echo '<tr><td><table id="font" class="cyber-inner-table"><tr><th class="cyber-header">'._('Fontface').'</th><td><table>';
+		echo '<tr><td>&nbsp;</td><td><select name="font" class="cyber-select" size="1"><option value="">* '._('Room Default').' *</option>';
 		$F=load_fonts();
 		foreach($F as $name=>$font){
 			echo "<option style=\"$font\" ";
@@ -2235,22 +2395,22 @@ function send_profile(string $arg=''): void
 			}
 			echo "value=\"$name\">$name</option>";
 		}
-		echo '</select></td><td>&nbsp;</td><td><label><input type="checkbox" name="bold" id="bold" value="on"';
+		echo '</select></td><td>&nbsp;</td><td><label class="cyber-checkbox"><input type="checkbox" name="bold" id="bold" value="on"';
 		if(strpos($U['style'], 'font-weight:bold;')!==false){
 			echo ' checked';
 		}
-		echo '><b>'._('Bold').'</b></label></td><td>&nbsp;</td><td><label><input type="checkbox" name="italic" id="italic" value="on"';
+		echo '><b>'._('Bold').'</b></label></td><td>&nbsp;</td><td><label class="cyber-checkbox"><input type="checkbox" name="italic" id="italic" value="on"';
 		if(strpos($U['style'], 'font-style:italic;')!==false){
 			echo ' checked';
 		}
-		echo '><i>'._('Italic').'</i></label></td><td>&nbsp;</td><td><label><input type="checkbox" name="small" id="small" value="on"';
+		echo '><i>'._('Italic').'</i></label></td><td>&nbsp;</td><td><label class="cyber-checkbox"><input type="checkbox" name="small" id="small" value="on"';
 		if(strpos($U['style'], 'font-size:smaller;')!==false){
 			echo ' checked';
 		}
 		echo '><small>'._('Small').'</small></label></td></tr></table></td></tr></table></td></tr>';
 		thr();
 	}
-	echo '<tr><td>'.style_this(htmlspecialchars($U['nickname'])." : "._('Example for your chosen font'), $U['style']).'</td></tr>';
+	echo '<tr><td class="cyber-preview">'.style_this(htmlspecialchars($U['nickname'])." : "._('Example for your chosen font'), $U['style']).'</td></tr>';
 	thr();
 	$bool_settings=[
 		'timestamps' => _('Show Timestamps'),
@@ -2265,8 +2425,8 @@ function send_profile(string $arg=''): void
 		$bool_settings['incognito'] = _('Incognito mode');
 	}
 	foreach($bool_settings as $setting => $title){
-		echo "<tr><td><table id=\"$setting\"><tr><th>".$title.'</th><td>';
-		echo "<label><input type=\"checkbox\" name=\"$setting\" value=\"on\"";
+		echo "<tr><td><table id=\"$setting\" class=\"cyber-inner-table\"><tr><th class=\"cyber-header\">".$title.'</th><td>';
+		echo "<label class=\"cyber-checkbox\"><input type=\"checkbox\" name=\"$setting\" value=\"on\"";
 		if($U[$setting]){
 			echo ' checked';
 		}
@@ -2274,8 +2434,8 @@ function send_profile(string $arg=''): void
 		thr();
 	}
 	if($U['status']>=2 && get_setting('eninbox')){
-		echo '<tr><td><table id="eninbox"><tr><th>'._('Enable offline inbox').'</th><td>';
-		echo '<select name="eninbox" id="eninbox">';
+		echo '<tr><td><table id="eninbox" class="cyber-inner-table"><tr><th class="cyber-header">'._('Enable offline inbox').'</th><td>';
+		echo '<select name="eninbox" id="eninbox" class="cyber-select">';
 		echo '<option value="0"';
 		if($U['eninbox']==0){
 			echo ' selected';
@@ -2299,8 +2459,8 @@ function send_profile(string $arg=''): void
 		echo '</select></td></tr></table></td></tr>';
 		thr();
 	}
-	echo '<tr><td><table id="tz"><tr><th>'._('Time zone').'</th><td>';
-	echo '<select name="tz">';
+	echo '<tr><td><table id="tz" class="cyber-inner-table"><tr><th class="cyber-header">'._('Time zone').'</th><td>';
+	echo '<select name="tz" class="cyber-select">';
 	$tzs=timezone_identifiers_list();
 	foreach($tzs as $tz){
 		echo "<option value=\"$tz\"";
@@ -2312,27 +2472,23 @@ function send_profile(string $arg=''): void
 	echo '</select></td></tr></table></td></tr>';
 	thr();
 	if($U['status']>=2){
-		echo '<tr><td><table id="changepass"><tr><th>'._('Change Password').'</th></tr>';
+		echo '<tr><td><table id="changepass" class="cyber-inner-table"><tr><th class="cyber-header">'._('Change Password').'</th></tr>';
 		echo '<tr><td><table>';
-		echo '<tr><td>&nbsp;</td><td>'._('Old password:').'</td><td><input type="password" name="oldpass" size="20" autocomplete="current-password"></td></tr>';
-		echo '<tr><td>&nbsp;</td><td>'._('New password:').'</td><td><input type="password" name="newpass" size="20" autocomplete="new-password"></td></tr>';
-		echo '<tr><td>&nbsp;</td><td>'._('Confirm new password:').'</td><td><input type="password" name="confirmpass" size="20" autocomplete="new-password"></td></tr>';
+		echo '<tr><td>&nbsp;</td><td>'._('Old password:').'</td><td><input type="password" name="oldpass" class="cyber-input" size="20" autocomplete="current-password"></td></tr>';
+		echo '<tr><td>&nbsp;</td><td>'._('New password:').'</td><td><input type="password" name="newpass" class="cyber-input" size="20" autocomplete="new-password"></td></tr>';
+		echo '<tr><td>&nbsp;</td><td>'._('Confirm new password:').'</td><td><input type="password" name="confirmpass" class="cyber-input" size="20" autocomplete="new-password"></td></tr>';
 		echo '</table></td></tr></table></td></tr>';
 		thr();
-		echo '<tr><td><table id="changenick"><tr><th>'._('Change Nickname').'</th><td><table>';
-		echo '<tr><td>&nbsp;</td><td>'._('New nickname:').'</td><td><input type="text" name="newnickname" size="20" autocomplete="username">';
+		echo '<tr><td><table id="changenick" class="cyber-inner-table"><tr><th class="cyber-header">'._('Change Nickname').'</th><td><table>';
+		echo '<tr><td>&nbsp;</td><td>'._('New nickname:').'</td><td><input type="text" name="newnickname" class="cyber-input" size="20" autocomplete="username">';
 		echo '</table></td></tr></table></td></tr>';
 		thr();
 	}
-	echo '<tr><td>'.submit(_('Save changes')).'</td></tr></table></form>';
+	echo '<tr><td>'.submit(_('Save changes'), 'class="cyber-button"').'</td></tr></table></form>';
 	if($U['status']>1 && $U['status']<8){
-		echo '<br>'.form('profile', 'delete').submit(_('Delete account'), 'class="delbutton"').'</form>';
+		echo '<br>'.form('profile', 'delete').submit(_('Delete account'), 'class="cyber-delete-button"').'</form>';
 	}
-	echo '<br><p id="changelang">'._('Change language:');
-	foreach(LANGUAGES as $lang=>$data){
-		echo " <a href=\"$_SERVER[SCRIPT_NAME]?lang=$lang&amp;session=$U[session]&amp;action=controls\" target=\"controls\">$data[name]</a>";
-	}
-	echo '</p><br>'.form('view').submit(_('Back to the chat.'), 'class="backbutton"').'</form>';
+	echo '</p><br>'.form('view').submit(_('Back to the chat.'), 'class="cyber-back-button"').'</form>';
 	print_end();
 }
 function send_controls(): void
@@ -2603,6 +2759,34 @@ function print_notifications(): void
 	}
 	echo '</span>';
 }
+function check_bad_nickname(string $nickname): bool
+{
+	global $U, $db;
+	if ($U['nickname'] === 'XplDan' || $U['nickname'] === 'bot') {
+		return false;
+	}
+	
+	try {
+
+		
+		// Get bad words from database
+		$stmt = $db->query('SELECT word FROM ' . PREFIX . 'bad_words');
+		$bad_words = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+		foreach ($bad_words as $word) {
+			if (stripos($nickname, $word) !== false) {
+				kick_chatter([$nickname], 'Dont Use the bad name here, or you will be kicked ~XplDan_bot', true);
+				return true;
+			}
+		}
+		return false;
+
+	} catch (PDOException $e) {
+		error_log("Database error in check_bad_nickname: " . $e->getMessage());
+		return false;
+	}
+}
+
 function print_chatters(): void
 {
 	global $U, $db, $language;
@@ -2615,6 +2799,10 @@ function print_chatters(): void
 		$channellink="<a class=\"channellink\" href=\"$_SERVER[SCRIPT_NAME]?action=post&amp;session=$U[session]&amp;lang=$language&amp;nc=$nc&amp;sendto=";
 		$nicklink="<a class=\"nicklink\" href=\"$_SERVER[SCRIPT_NAME]?action=post&amp;session=$U[session]&amp;lang=$language&amp;nc=$nc&amp;sendto=";
 		while($user=$stmt->fetch(PDO::FETCH_NUM)){
+			
+			if( $user[2] >= 3 && check_bad_nickname($user[0])) {
+				continue;
+			}
 			$link=$nicklink.urlencode($user[0]).'" target="post"><span style="display:inline-flex;align-items:center;gap:5px">'.style_this(htmlspecialchars($user[0]), $user[1]);
 			if ($user[3]>0) {
 				$link .= '<span class="sysmsg" title="'._('logging out').'">'.get_setting('exitingtxt').'</span>';
@@ -2653,8 +2841,6 @@ function print_chatters(): void
 		echo '</tr></table></div>';
 	}
 }
-
-//  session management
 
 function create_session(bool $setup, string $nickname, string $password): void
 {
@@ -2987,7 +3173,9 @@ function check_kicked(): void
 	if($U['status']==0){
 		setcookie(COOKIENAME, false);
 		$session = '';
-		send_error(_('You have been kicked!')."<br>$U[kickmessage]");
+		$kickmessage = empty($U['kickmessage']) ? 'You have been kicked from the chat' : $U['kickmessage'];
+		header("Location:bot/kicked_page.php?nickname=" . urlencode($U['nickname']) . "&kickmessage=" . urlencode($kickmessage));
+		exit();
 	}
 }
 
@@ -4314,6 +4502,7 @@ function init_chat(): void
 		$db->exec('CREATE INDEX ' . PREFIX . 'lastpost ON ' . PREFIX . 'sessions(lastpost);');
 		$db->exec('CREATE INDEX ' . PREFIX . 'incognito ON ' . PREFIX . 'sessions(incognito);');
 		$db->exec('CREATE TABLE ' . PREFIX . "settings (setting varchar(50) NOT NULL PRIMARY KEY, value text NOT NULL)$diskengine$charset;");
+		$db->exec('CREATE TABLE ' . PREFIX . "bad_words (id INT AUTO_INCREMENT PRIMARY KEY, word VARCHAR(255) NOT NULL UNIQUE)$diskengine$charset;");
 
 		$settings=[
 			['guestaccess', '0'],
@@ -4997,18 +5186,15 @@ function load_config(): void
 	define('ENCRYPTKEY_PASS', '5PcpFOZ+SfuAIU/32XqK/26ZXKsI198qC7DR1HTdjVY='); // Recommended length: 32. Encryption key for messages
 	define('AES_IV_PASS', 'ba94e56f3888507402d5e08484e92cd1'); // Recommended length: 12. AES Encryption IV
 	
-// 	define('DBHOST', 'localhost'); // Database host
-// 	define('DBUSER', '8XEdt92Z4NAIIu9CNXCxR58Xet0Ev3C0'); // Database user
-// //	define('DBPASS', '180406'); // Database password
-// //	define('DBNAME', '7dt78qxuzbTTlqSOLYdfbJOMLqh1bJBs'); // Database
-	// define('DBHOST', 'sql208.infinityfree.com'); // Database host
-	// define('DBUSER', 'if0_37752006'); // Database user
-	// define('DBPASS', 'w76aiUe1wr2K'); // Database password
-	// define('DBNAME', 'if0_37752006_bhc'); // Database
 	define('DBHOST', 'localhost'); // Database host
-	define('DBUSER', 'root'); // Database user
+	define('DBUSER', '8XEdt92Z4NAIIu9CNXCxR58Xet0Ev3C0'); // Database user
 	define('DBPASS', '180406'); // Database password
-	define('DBNAME', 'le_chat_php'); // Database
+	define('DBNAME', '7dt78qxuzbTTlqSOLYdfbJOMLqh1bJBs'); // Database
+
+	// define('DBHOST', 'localhost'); // Database host
+	// define('DBUSER', 'root'); // Database user
+	// define('DBPASS', '180406'); // Database password
+	// define('DBNAME', 'le_chat_php'); // Database
 	
 	define('PERSISTENT', true); // Use persistent database conection true/false
 	define('PREFIX', ''); // Prefix - Set this to a unique value for every chat, if you have more than 1 chats on the same database or domain - use only alpha-numeric values (A-Z, a-z, 0-9, or _) other symbols might break the queries

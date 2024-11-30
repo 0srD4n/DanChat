@@ -743,7 +743,7 @@ color:red;
 
 #frameset-top {
   position: fixed;
-  top: 0;
+  top: 50px;
   left: 0;
   right: 0;
   height: 120px;
@@ -876,6 +876,312 @@ a:hover img {
 #messages {
   word-wrap: break-word;
   padding: 10px;
+}
+body.admin .admin-panel {
+  background: #000000;
+  color: #0f0;
+  border: 1px solid #1a1a1a;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0,255,0,0.2);
+}
+
+body.admin .admin-panel h2 {
+  color: rgb(255, 255, 255);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+body.admin .admin-section {
+  background: #111;
+  border: 1px solid #222;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 3px;
+}
+
+body.admin .admin-section th {
+  color: rgb(255, 255, 255);
+  font-size: 1.1em;
+  padding: 10px;
+  text-transform: uppercase;
+}
+
+body.admin select, 
+body.admin input[type="text"], 
+body.admin input[type="password"] {
+  background: #000;
+  border: 1px solid #0f0;
+  color: #0f0;
+  padding: 8px;
+  border-radius: 3px;
+  margin: 5px;
+}
+
+body.admin select:focus, 
+body.admin input:focus {
+  box-shadow: 0 0 5px #0f0;
+  outline: none;
+}
+
+body.admin input[type="submit"] {
+  background: #000;
+  color: #0f0;
+  border: 1px solid #0f0;
+  padding: 8px 15px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+body.admin input[type="submit"]:hover {
+  background: #0f0;
+  color: #000;
+  box-shadow: 0 0 10px #0f0;
+}
+
+body.admin .delbutton {
+  background: #300;
+  border-color: #f00;
+  color: #f00;
+}
+
+body.admin .delbutton:hover {
+  background: #f00;
+  color: #000;
+  box-shadow: 0 0 10px #f00;
+}
+
+body.admin .status-message {
+  color: rgb(255, 60, 0);
+  text-align: center;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #0f0;
+  background: rgba(0,20,0,0.5);
+}
+
+body.admin .badwords-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+body.admin .badwords-table th,
+body.admin .badwords-table td {
+  padding: 10px;
+  border: 1px solid #222;
+}
+
+body.admin .badwords-table tr:hover {
+  background: rgba(0,255,0,0.1);
+}
+
+body.admin .btn {
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+body.admin .btn-primary {
+  background: #000;
+  color: #0f0;
+  border: 1px solid #0f0;
+}
+
+body.admin .btn-danger {
+  background: #000;
+  color: #f00;
+  border: 1px solid #f00;
+}
+
+body.admin .btn:hover {
+  box-shadow: 0 0 10px currentColor;
+}
+
+body.profile {
+  background: #000;
+  color: rgb(255, 255, 255);
+  font-family: 'Courier New', monospace;
+}
+
+body.profile .cyber-title {
+  color: rgb(255, 255, 255);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 2em;
+  margin: 20px 0;
+}
+
+body.profile .cyber-table {
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto;
+  border: 1px solid rgb(255, 255, 255);
+  background: rgba(0,20,0,0.2);
+  box-shadow: 0 0 20px rgba(0,255,0,0.1);
+}
+
+body.profile .cyber-inner-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+body.profile .cyber-header {
+  color: rgb(255, 255, 255);
+  text-align: left;
+  padding: 15px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(0,255,0,0.2);
+}
+
+body.profile .cyber-input,
+body.profile .cyber-select {
+  background: #000;
+  border: 1px solid rgb(255, 0, 221);
+  color: rgb(255, 255, 255);
+  padding: 8px;
+  width: 200px;
+  margin: 5px;
+}
+
+body.profile .cyber-input:focus,
+body.profile .cyber-select:focus {
+  outline: none;
+  box-shadow: 0 0 10px rgb(255, 255, 255);
+}
+
+body.profile .cyber-checkbox {
+  cursor: pointer;
+  user-select: none;
+}
+
+body.profile .cyber-checkbox input {
+  margin-right: 8px;
+}
+
+body.profile .cyber-preview {
+  padding: 15px;
+  text-align: center;
+  background: rgba(0,20,0,0.3);
+}
+
+body.profile .cyber-button {
+  background: #000;
+  color: rgb(255, 255, 255);
+  border: 1px solid rgb(255, 0, 157);
+  padding: 10px 20px;
+  text-transform: uppercase;
+  cursor: pointer;
+  letter-spacing: 1px;
+  margin: 10px;
+  transition: all 0.3s ease;
+}
+
+body.profile .cyber-button:hover {
+  background: #0f0;
+  color: #000;
+  box-shadow: 0 0 20px #0f0;
+}
+
+body.profile .cyber-delete-button {
+  background: #000;
+  color: #f00;
+  border: 1px solid #f00;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  cursor: pointer;
+  letter-spacing: 1px;
+  margin: 10px;
+}
+
+body.profile .cyber-delete-button:hover {
+  background: #f00;
+  color: #000;
+  box-shadow: 0 0 20px #f00;
+}
+
+body.profile .cyber-back-button {
+  background: #000;
+  color: #0ff;
+  border: 1px solid #0ff;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  cursor: pointer;
+  letter-spacing: 1px;
+  margin: 10px;
+}
+
+body.profile .cyber-back-button:hover {
+  background: #0ff;
+  color: #000;
+  box-shadow: 0 0 20px #0ff;
+}
+
+body.profile .cyber-link {
+  color: rgb(0, 60, 255);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+body.profile .cyber-link:hover {
+  color: #fff;
+  border-color: #fff;
+  text-shadow: 0 0 10px #fff;
+}
+
+body.profile .cyber-text {
+  color: rgb(255, 255, 255);
+  text-align: center;
+  margin: 15px 0;
+}
+
+body.profile .cyber-color {
+  width: 50px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #0f0;
+  background: none;
+}
+
+body.profile .cyber-alert {
+  color: #f00;
+  display: block;
+  text-align: center;
+  margin: 10px 0;
+  text-shadow: 0 0 5px #f00;
+}
+#navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: #000;
+  border-bottom: 1px solid #0f0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+#navbar a {
+  color: #0f0;
+  text-decoration: none;
+  margin-right: 20px;
+  font-family: monospace;
+}
+#navbar a:hover {
+  color: #fff;
+}
+#frameset-mid {
+  margin-top: 50px;
 }
 
 
