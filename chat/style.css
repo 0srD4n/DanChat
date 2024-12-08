@@ -19,7 +19,7 @@ input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; bord
   box-shadow: -2px 0 10px rgba(0, 255, 0, 0.096);
   scrollbar-width: thin;
   scrollbar-color: #00ff00 #000;
-  padding: 10px; /* Added padding */
+  padding: 10px; 
 }
 
 .messages #chatters td, 
@@ -63,15 +63,15 @@ input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; bord
   font-family: 'Fira Code', monospace;
 }
 .messages #chatters .afk-badge {
-  color: #ff0000; /* White text color */
-  font-size: 10px; /* Font size for readability */
+  color: #ff0000; 
+  font-size: 10px; 
   text-align: center;
-  font-weight: bold; /* Bold font for emphasis */
-  text-transform: uppercase; /* Uppercase for visibility */
-  /* Adjustments for better integration with #chatters */
-  margin-left: 2px; /* Space from the left */
-  display: inline-flex; /* Display inline with other elements */
-  align-items: center; /* Align vertically with other elements */
+  font-weight: bold; 
+  text-transform: uppercase; 
+
+  margin-left: 2px; 
+  display: inline-flex;
+  align-items: center;
 }
 body, iframe {
     background-color: #000000;
@@ -172,7 +172,6 @@ input[type=text], input[type=password], input[type=submit], select, textarea {
     margin-left: auto;
     margin-right: auto;
 }
-/* Animasi untuk elemen login */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -211,7 +210,6 @@ input[type=text], input[type=password], input[type=submit], select, textarea {
   }
 }
 
-/* Style untuk body */
 .login {
   background-color: rgba(0,0,0,0.8); 
   background-image: url('./danchat.svg');
@@ -234,7 +232,6 @@ input[type=text], input[type=password], input[type=submit], select, textarea {
   z-index: -1;
 }
 
-/* Style untuk container login */
 #login_table {
   background: rgba(0,20,20,0.8);
 backdrop-filter: blur(10px);
@@ -249,7 +246,6 @@ width: 400px;
   margin: 20px auto;
 }
 
-/* Style untuk input fields */
 #nickname_input,
 #password_input,
 #regpass_input,
@@ -273,7 +269,6 @@ width: 400px;
   outline: none;
 }
 
-/* Style untuk labels */
 #nickname_label,
 #password_label,
 #regpass_label,
@@ -286,7 +281,6 @@ width: 400px;
   text-shadow: 0 0 5px rgba(0,255,0,0.5);
 }
 
-/* Style untuk tombol submit */
 #submit_button,
 #submit_btn {
   width: 100%;
@@ -308,32 +302,7 @@ width: 400px;
   transform: scale(1.02);
 }
 
-/* Style untuk judul */
-/* #chatname {
-  background: linear-gradient(120deg, #2a2a2a, #3a3a3a, #2a2a2a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-family: 'Mulish', sans-serif;
-  letter-spacing: 3px;
-  font-size: 2.2em;
-  text-align: center;
-  margin-bottom: 30px;
-  padding: 15px;
-  margin-top: 0;
-  text-shadow: 2px 2px 4px rgb(255, 0, 0);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-  color: #e0e0e0;
-}
 
-#chatname:after {
-  content: '';
-  display: block;
-  width: 50%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.342), transparent);
-  margin: 10px auto 0;
-} */
-/* Berikut adalah kode CSS yang menambahkan animasi glitch pada elemen dengan ID `#chatname`. Animasi ini memberikan tampilan modern dan siber yang kompleks namun tetap mudah dibaca oleh pengunjung. */
 .cyber-glitch-title {
     font-family: "Fira Code", monospace;
     font-weight: 900;
@@ -462,20 +431,20 @@ width: 400px;
 }
 @media screen and (max-width: 768px) {
     .cyber-glitch-title {
-        font-size: 1.2em; /* Ukuran font lebih kecil untuk layar mobile */
-        padding: 10px; /* Padding lebih kecil */
-        max-width: 80%; /* Lebar maksimum lebih besar untuk mobile */
-        letter-spacing: 2px; /* Jarak antar huruf lebih kecil */
-        margin: 20px auto; /* Margin lebih kecil */
+        font-size: 1.2em; 
+        padding: 10px;
+        max-width: 80%; 
+        letter-spacing: 2px; 
+        margin: 20px auto; 
     }
 
     .cyber-glitch-title::before,
     .cyber-glitch-title::after {
-        padding: 10px; /* Padding pseudo-element lebih kecil */
+        padding: 10px;
     }
 
     .cyber-glitch-title::before {
-        left: 2px; /* Offset glitch lebih kecil */
+        left: 2px;
         text-shadow: -2px 0 #ff0000;
         clip: rect(20px, 450px, 80px, 0);
     }
@@ -596,7 +565,6 @@ width: 400px;
   font-weight: bolder;
 }
 
-/* Style untuk language selector */
 #changelang {
   margin-top: 30px;
   text-align: center;
@@ -729,7 +697,6 @@ td#color_label {
 .warnss{
 color:red;
 }
-/* Frameset styles */
 #frameset-mid {
   position: fixed;
   top: 120px;
@@ -765,7 +732,6 @@ color:red;
   border-top: 1px solid;
 }
 
-/* Filter styles */
 .filter table table {
   width: 100%;
 }
@@ -791,7 +757,6 @@ color:red;
   width: 5em;
 }
 
-/* Link filter styles */
 .linkfilter table table {
   width: 100%;
 }
@@ -811,7 +776,6 @@ color:red;
   width: 5em;
 }
 
-/* Messages styles */
 #chatters {
   padding: 10px;
 }
@@ -1003,185 +967,45 @@ body.admin .btn:hover {
   box-shadow: 0 0 10px currentColor;
 }
 
-body.profile {
-  background: #000;
-  color: rgb(255, 255, 255);
-  font-family: 'Courier New', monospace;
-}
 
-body.profile .cyber-title {
-  color: rgb(255, 255, 255);
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-size: 2em;
-  margin: 20px 0;
-}
-
-body.profile .cyber-table {
-  width: 90%;
-  max-width: 800px;
-  margin: 0 auto;
-  border: 1px solid rgb(255, 255, 255);
-  background: rgba(0,20,0,0.2);
-  box-shadow: 0 0 20px rgba(0,255,0,0.1);
-}
-
-body.profile .cyber-inner-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-body.profile .cyber-header {
-  color: rgb(255, 255, 255);
-  text-align: left;
-  padding: 15px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px solid rgba(0,255,0,0.2);
-}
-
-body.profile .cyber-input,
-body.profile .cyber-select {
-  background: #000;
-  border: 1px solid rgb(255, 0, 221);
-  color: rgb(255, 255, 255);
-  padding: 8px;
-  width: 200px;
-  margin: 5px;
-}
-
-body.profile .cyber-input:focus,
-body.profile .cyber-select:focus {
-  outline: none;
-  box-shadow: 0 0 10px rgb(255, 255, 255);
-}
-
-body.profile .cyber-checkbox {
-  cursor: pointer;
-  user-select: none;
-}
-
-body.profile .cyber-checkbox input {
-  margin-right: 8px;
-}
-
-body.profile .cyber-preview {
-  padding: 15px;
-  text-align: center;
-  background: rgba(0,20,0,0.3);
-}
-
-body.profile .cyber-button {
-  background: #000;
-  color: rgb(255, 255, 255);
-  border: 1px solid rgb(255, 0, 157);
-  padding: 10px 20px;
-  text-transform: uppercase;
-  cursor: pointer;
-  letter-spacing: 1px;
-  margin: 10px;
-  transition: all 0.3s ease;
-}
-
-body.profile .cyber-button:hover {
-  background: #0f0;
-  color: #000;
-  box-shadow: 0 0 20px #0f0;
-}
-
-body.profile .cyber-delete-button {
-  background: #000;
-  color: #f00;
-  border: 1px solid #f00;
-  padding: 10px 20px;
-  text-transform: uppercase;
-  cursor: pointer;
-  letter-spacing: 1px;
-  margin: 10px;
-}
-
-body.profile .cyber-delete-button:hover {
-  background: #f00;
-  color: #000;
-  box-shadow: 0 0 20px #f00;
-}
-
-body.profile .cyber-back-button {
-  background: #000;
-  color: #0ff;
-  border: 1px solid #0ff;
-  padding: 10px 20px;
-  text-transform: uppercase;
-  cursor: pointer;
-  letter-spacing: 1px;
-  margin: 10px;
-}
-
-body.profile .cyber-back-button:hover {
-  background: #0ff;
-  color: #000;
-  box-shadow: 0 0 20px #0ff;
-}
-
-body.profile .cyber-link {
-  color: rgb(0, 60, 255);
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-body.profile .cyber-link:hover {
-  color: #fff;
-  border-color: #fff;
-  text-shadow: 0 0 10px #fff;
-}
-
-body.profile .cyber-text {
-  color: rgb(255, 255, 255);
-  text-align: center;
-  margin: 15px 0;
-}
-
-body.profile .cyber-color {
-  width: 50px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid #0f0;
-  background: none;
-}
-
-body.profile .cyber-alert {
-  color: #f00;
-  display: block;
-  text-align: center;
-  margin: 10px 0;
-  text-shadow: 0 0 5px #f00;
-}
 #navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 50px;
-  background: #000;
-  border-bottom: 1px solid #0f0;
+  background: rgba(0, 0, 0, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
   z-index: 1000;
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 5px;
 }
+
 #navbar a {
-  color: #0f0;
+  color: #e4e4e4;
   text-decoration: none;
-  margin-right: 20px;
-  font-family: monospace;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  font-weight: bolder;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  margin: 0 5px;
 }
+
 #navbar a:hover {
-  color: #fff;
+  color: #ffffff;
+  background: rgba(77, 77, 77, 0.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
 }
+
 #frameset-mid {
-  margin-top: 50px;
+  margin-top: 60px;
 }
 
 

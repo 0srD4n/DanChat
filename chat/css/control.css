@@ -1,0 +1,190 @@
+/* Compact Dark Theme for Link Management */
+:root {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #252525;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --accent: #4a9eff;
+  --danger: #ff4a4a;
+  --success: #4aff4a;
+  --border-radius: 4px;
+  --spacing: 0.75rem;
+}
+h2,h3 {
+text-align: center;
+}
+tr th {
+    background-color:var(--bg-primary) ;
+}
+table {
+ background-color:black ;
+    border-collapse: collapse;
+}
+body.show_manageLink {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.4;
+  margin: 0;
+  padding: var(--spacing);
+}
+
+.manage-links {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+h2, h3 {
+  color: var(--accent);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.add-link-form, .edit-form {
+  background: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  margin-bottom: 2rem;
+  border: 1px solid #333;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #404040;
+  border-radius: var(--border-radius);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.form-help {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Table Styles */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 2rem;
+  background: var(--bg-secondary);
+  border: 1px solid #333;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #333;
+}
+
+th {
+  background: #2a2a2a;
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover {
+  background: rgba(74, 158, 255, 0.1);
+}
+
+.btn-submit, .btn-edit {
+  background: var(--accent);
+  color: white;
+  margin-right: 0.5rem;
+}
+
+.btn-delete {
+  background: var(--danger);
+  color: white;
+}
+
+.status-active {
+  color: var(--success);
+  font-weight: 500;
+}
+
+.status-inactive {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.no-links {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius);
+  font-size: 1.1rem;
+}
+
+.required-note {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .manage-links {
+    padding: 0.5rem;
+  }
+  
+  table, th, td {
+    font-size: 0.9rem;
+  }
+  
+  th, td {
+    padding: 0.5rem;
+  }
+  
+  .btn-edit, .btn-delete {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .edit-form {
+    padding: 1rem;
+  }
+}

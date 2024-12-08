@@ -1,5 +1,4 @@
 <?php
-
 /*
 * status codes
 * 0 - Kicked/Banned
@@ -14,6 +13,8 @@
 * 9 - Private messages
 */
 
+// Add this line
+$englobal = false; // Default value for global English setting
 // initialize and load variables/configuration
 const LANGUAGES = [
 	'ar' => ['name' => 'العربية', 'locale' => 'ar', 'dir' => 'rtl'],
@@ -44,7 +45,7 @@ $language = LANG;// user selected language
 $locale = LANGUAGES[LANG]['locale'];// user selected locale
 $dir = LANGUAGES[LANG]['dir'];// user selected language direction
 $scripts = []; //js enhancements
-$styles = ['./style.css', '!inline']; //css styles - prioritaskan external styles
+$styles = ['./style.css']; //css styles - prioritaskan external styles
 $session = $_REQUEST['session'] ?? ''; //requested session
 // set session variable to cookie if cookies are enabled
 if(!isset($_REQUEST['session']) && isset($_COOKIE[COOKIENAME])){
@@ -55,274 +56,708 @@ load_lang();
 check_db();
 cron();
 route();
+function route(): void {
+    global $U, $db;
 
-//  main program: decide what to do based on queries
-
-
-function route(): void
-{
-	global $U, $db;
-
-	if (!isset($_REQUEST['action'])) {
-		send_login();
-	} 
-	elseif($_REQUEST['action']==='view'){
-		check_session();
-		send_messages();
-	}elseif($_REQUEST['action']==='redirect' && !empty($_GET['url'])){
-		send_redirect($_GET['url']);
-	}elseif($_REQUEST['action']==='wait'){
-		parse_sessions();
-		send_waiting_room();
-	}elseif($_REQUEST['action']==='post'){
-		check_session();
-		if(isset($_POST['kick']) && isset($_POST['sendto']) && $_POST['sendto']!=='s *'){
-			if($U['status']>=5 || ($U['status']>=3 && (get_setting('memkickalways') || (get_count_mods()==0 && get_setting('memkick'))))){
-				if(isset($_POST['what']) && $_POST['what']==='purge'){
-					kick_chatter([$_POST['sendto']], $_POST['message'], true);
-				}else{
-					kick_chatter([$_POST['sendto']], $_POST['message'], false);
-				}
-			}
-		}elseif(isset($_POST['message']) && isset($_POST['sendto'])){
-			send_post(validate_input());
-		}
-		send_post();
-	}elseif($_REQUEST['action']==='login'){
-		check_login();
-		show_fails();
-		send_frameset();
-	}elseif($_REQUEST['action']==='controls'){
-		check_session();
-		send_controls();
-	}elseif($_REQUEST['action']==='greeting'){
-		check_session();
-		send_greeting();
-	}elseif($_REQUEST['action']==='delete'){
-		check_session();
-		if(!isset($_POST['what'])){
-		}elseif($_POST['what']==='all'){
-			if(isset($_POST['confirm'])){
-				del_all_messages('', (int) ($U['status']==1 ? $U['entry'] : 0));
-			}else{
-				send_del_confirm();
-			}
-		}elseif($_POST['what']==='last'){
-			del_last_message();
-		}elseif($_POST['what']==='hilite' && isset($_POST['message_id'])) {
-			delete_message((int)$_POST['message_id']);			
-		}
-		send_post();
-	}elseif($_REQUEST['action']==='profile'){
-		check_session();
-		$arg='';
-		if(!isset($_POST['do'])){
-		}elseif($_POST['do']==='save'){
-			$arg=save_profile();
-		}elseif($_POST['do']==='delete'){
-			if(isset($_POST['confirm'])){
-				delete_account();
-			}else{
-				send_delete_account();
-			}
-		}
-		send_profile($arg);
-	}elseif($_REQUEST['action']==='logout' && $_SERVER['REQUEST_METHOD'] === 'POST'){
-		check_session();
-		if($U['status']<3 && get_setting('exitwait')){
-			$U['exiting']=1;
-			$stmt=$db->prepare('UPDATE ' . PREFIX . 'sessions SET exiting=1 WHERE session=? LIMIT 1;');
-			$stmt->execute([$U['session']]);
-		} else {
-			kill_session();
-		}
-		send_logout();
-	}elseif($_REQUEST['action']==='colours'){
-		check_session();
-		send_colours();
-	}elseif($_REQUEST['action']==='notes'){
-		check_session();
-		if(!isset($_POST['do'])){
-		}elseif($_POST['do']==='admin' && $U['status']>6){
-			send_notes(0);
-		}elseif($_POST['do']==='staff' && $U['status']>=5){
-			send_notes(1);
-		}elseif($_POST['do']==='public' && $U['status']>=3){
-			send_notes(3);
-		}
-		if($U['status']<3 || (!get_setting('personalnotes') && !get_setting('publicnotes'))){
-			send_access_denied();
-		}
-		send_notes(2);
-	}elseif($_REQUEST['action']==='help'){
-		check_session();
-		send_help();
-	}elseif($_REQUEST['action']==='viewpublicnotes'){
-		check_session();
-		view_publicnotes();
-	}elseif($_REQUEST['action']==='inbox'){
-		check_session();
-		if(isset($_POST['do'])){
-			clean_inbox_selected();
-		}
-		send_inbox();
-	}elseif($_REQUEST['action']==='download'){
-		send_download();
-	}elseif($_REQUEST['action']==='admin'){
-		check_session();
-		send_admin(route_admin());
-	}elseif($_REQUEST['action']==='setup'){
-		route_setup();
-	}elseif($_REQUEST['action']==='sa_password_reset'){
-		send_sa_password_reset();
-	}elseif($_REQUEST['action']==='send_toggle_afk'){
-		check_session();
-		send_toggle_afk();
-	}else{
-		send_login();
-	}
-}
-function route_admin() : string {
-	global $U, $db;
-	if($U['status']<5){
-		send_access_denied();
-	}
-	if(!isset($_POST['do'])){
-		return '';
-	}elseif($_POST['do']==='clean'){
-		if($_POST['what']==='choose'){
-			send_choose_messages();
-		}elseif($_POST['what']==='selected'){
-			clean_selected((int) $U['status'], $U['nickname']);
-		}elseif($_POST['what']==='room'){
-			clean_room();
-		}elseif($_POST['what']==='nick'){
-			$stmt=$db->prepare('SELECT null FROM ' . PREFIX . 'members WHERE nickname=? AND status>=?;');
-			$stmt->execute([$_POST['nickname'], $U['status']]);
-			if(!$stmt->fetch(PDO::FETCH_ASSOC)){
-				del_all_messages($_POST['nickname'], 0);
-			}
-		}
-	}elseif($_POST['do']==='kick'){
-		if(isset($_POST['name'])){
-			if(isset($_POST['what']) && $_POST['what']==='purge'){
-				kick_chatter($_POST['name'], $_POST['kickmessage'], true);
-			}else{
-				kick_chatter($_POST['name'], $_POST['kickmessage'], false);
-			}
-		}
-	}elseif($_POST['do']==='logout'){
-		if(isset($_POST['name'])){
-			logout_chatter($_POST['name']);
-		}
-	}elseif($_POST['do']==='sessions'){
-		if(isset($_POST['kick']) && isset($_POST['nick'])){
-			kick_chatter([$_POST['nick']], '', false);
-		}elseif(isset($_POST['logout']) && isset($_POST['nick'])){
-			logout_chatter([$_POST['nick']]);
-		}
-		send_sessions();
-	}elseif($_POST['do']==='register'){
-		return register_guest(3, $_POST['name']);
-	}elseif($_POST['do']==='superguest'){
-		return register_guest(2, $_POST['name']);
-	}elseif($_POST['do']==='status'){
-		return change_status($_POST['name'], $_POST['set']);
-	}elseif($_POST['do']==='regnew'){
-		return register_new($_POST['name'], $_POST['pass']);
-	}elseif($_POST['do']==='approve'){
-		approve_session();
-		send_approve_waiting();
-	}elseif($_POST['do']==='guestaccess'){
-		if(isset($_POST['guestaccess']) && preg_match('/^[0123]$/', $_POST['guestaccess'])){
-			update_setting('guestaccess', $_POST['guestaccess']);
-			change_guest_access(intval($_POST['guestaccess']));
-		}
-	}elseif($_POST['do']==='filter'){
-		send_filter(manage_filter());
-	}elseif($_POST['do']==='linkfilter'){
-		send_linkfilter(manage_linkfilter());
-	}elseif($_POST['do']==='topic'){
-		if(isset($_POST['topic'])){
-			update_setting('topic', htmlspecialchars($_POST['topic']));
-		}
-	}elseif($_POST['do']==='passreset'){
-		return passreset($_POST['name'], $_POST['pass']);
-	}elseif($_POST['do']==='add_word' && isset($_POST['new_word'])) {
-		return add_bad_word($_POST['new_word']);
-	}elseif($_POST['do']==='delete_word' && isset($_POST['word_id'])) {
-		return delete_bad_word((int)$_POST['word_id']);
-	}
-	return '';
-}
-function delete_bad_word(int $word_id): string {
-    global $db;
-    
-    try {
-        // Delete the word
-        $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'bad_words WHERE id = ?');
-        $stmt->execute([$word_id]);
-        
-        if($stmt->rowCount() > 0) {
-            return '<span style="color:red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad Name deleted successfully') . '</span>';
-        } else {
-            return '<span style="color: red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad Name not found') . '</span>';
-        }
-
-    } catch (PDOException $e) {
-        error_log("Error deleting bad name ID $word_id: " . $e->getMessage());
-        return _('Error deleting bad name');
-    }
-}
-function add_bad_word(string $word): string {
-    global $db;
-    
-    // Input validation
-    $word = trim($word);
-    if (empty($word)) {
-        return _('Word cannot be empty');
-    }
-    
-    if (mb_strlen($word) > 255) { // Match VARCHAR(255) limit
-        return _('Word is too long (maximum 255 characters)');
-    }
-    
-    try {
-        // Check for duplicates first
-        $stmt = $db->prepare('SELECT COUNT(*) FROM ' . PREFIX . 'bad_words WHERE word = ?');
-        $stmt->execute([$word]);
-        if ($stmt->fetchColumn() > 0) {
-            return _('Word already exists in bad words list');
-        }
-        
-        // Create table if not exists
-        $db->exec('CREATE TABLE IF NOT EXISTS ' . PREFIX . 'bad_words (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            word VARCHAR(255) NOT NULL UNIQUE
-        )');
-        
-        // Insert new word with error handling
-        try {
-            $stmt = $db->prepare('INSERT INTO ' . PREFIX . 'bad_words (word) VALUES (?)');
-            $stmt->execute([$word]);
-            
-            if($stmt->rowCount() > 0) {
-                return '<span style="color:red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad name added successfully') . '</span>';
-            } else {
-                return '<span style="color: red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Failed to add bad name') . '</span>';
+    if (!isset($_REQUEST['action'])) {
+        send_login();
+    } elseif ($_REQUEST['action'] === 'view') {
+        check_session();
+        send_messages();
+    } elseif ($_REQUEST['action'] === 'redirect' && !empty($_GET['url'])) {
+        send_redirect($_GET['url']); 
+    } elseif ($_REQUEST['action'] === 'wait') {
+        parse_sessions();
+        send_waiting_room();
+    } elseif ($_REQUEST['action'] === 'post') {
+        check_session();
+        if (isset($_POST['kick']) && isset($_POST['sendto']) && $_POST['sendto'] !== 's *') {
+            if ($U['status'] >= 5 || ($U['status'] >= 3 && (get_setting('memkickalways') || (get_count_mods() == 0 && get_setting('memkick'))))) {
+                if (isset($_POST['what']) && $_POST['what'] === 'purge') {
+                    kick_chatter([$_POST['sendto']], $_POST['message'], true);
+                } else {
+                    kick_chatter([$_POST['sendto']], $_POST['message'], false);
+                }
             }
-        } catch (PDOException $e) {
-            // Log specific insert error
-            error_log("Failed to insert bad word: " . $e->getMessage());
-            return _('Error adding bad word - please try again');
+        } elseif (isset($_POST['message']) && isset($_POST['sendto'])) {
+            send_post(validate_input());
+        }
+        send_post();
+		send_messages();
+    } elseif ($_REQUEST['action'] === 'login') {
+        check_login();
+        show_fails();
+        send_frameset();
+    } elseif ($_REQUEST['action'] === 'controls') {
+        check_session();
+        send_controls();
+    } elseif ($_REQUEST['action'] === 'greeting') {
+        check_session();
+        send_greeting();
+    } elseif ($_REQUEST['action'] === 'delete') {
+        check_session();
+        if (!isset($_POST['what'])) {
+            // No action
+        } elseif ($_POST['what'] === 'all') {
+            if (isset($_POST['confirm'])) {
+                del_all_messages('', (int)($U['status'] == 1 ? $U['entry'] : 0));
+            } else {
+                send_del_confirm();
+            }
+        } elseif ($_POST['what'] === 'last') {
+            del_last_message();
+        } elseif ($_POST['what'] === 'hilite' && isset($_POST['message_id'])) {
+            check_session();
+            delete_message((int)$_POST['message_id']);
+        }
+		send_messages();
+    } elseif ($_REQUEST['action'] === 'profile') {
+        check_session();
+        $arg = '';
+        if (!isset($_POST['do'])) {
+            // No action
+        } elseif ($_POST['do'] === 'save') {
+            $arg = save_profile();
+        } elseif ($_POST['do'] === 'delete') {
+            if (isset($_POST['confirm'])) {
+                delete_account();
+            } else {
+                send_delete_account();
+            }
+        }
+        send_profile($arg);
+    } elseif ($_REQUEST['action'] === 'logout' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        check_session();
+        if ($U['status'] < 3 && get_setting('exitwait')) {
+            $U['exiting'] = 1;
+            $stmt = $db->prepare('UPDATE ' . PREFIX . 'sessions SET exiting=1 WHERE session=? LIMIT 1;');
+            $stmt->execute([$U['session']]);
+        } else {
+            kill_session();
+        }
+        send_logout();
+    } elseif ($_REQUEST['action'] === 'viewlinks') {
+        check_session();
+        show_manageLink();
+    } elseif ($_REQUEST['action'] === 'colours') {
+        check_session();
+        send_colours();
+    } elseif ($_REQUEST['action'] === 'notes') {
+        check_session();
+        if (!isset($_POST['do'])) {
+            // No action
+        } elseif ($_POST['do'] === 'admin' && $U['status'] > 6) {
+            send_notes(0);
+        } elseif ($_POST['do'] === 'staff' && $U['status'] >= 5) {
+            send_notes(1);
+        } elseif ($_POST['do'] === 'public' && $U['status'] >= 3) {
+            send_notes(3);
+        } elseif ($_POST['do'] === 'votes' && $U['status'] >= 3) {
+            send_votes();
+        }
+        if ($U['status'] < 3 || (!get_setting('personalnotes') && !get_setting('publicnotes'))) {
+            send_access_denied();
+        }
+        send_notes(2);
+    } elseif ($_REQUEST['action'] === 'help') {
+        check_session();
+        send_help();
+    } elseif ($_REQUEST['action'] === 'viewpublicnotes') {
+        check_session();
+        view_publicnotes();
+    } elseif ($_REQUEST['action'] === 'inbox') {
+        check_session();
+        if (isset($_POST['do'])) {
+            clean_inbox_selected();
+        }
+        send_inbox();
+    } elseif ($_REQUEST['action'] === 'download') {
+        send_download();
+    } elseif ($_REQUEST['action'] === 'admin') {
+        check_session();
+        send_admin(route_admin());
+    } elseif ($_REQUEST['action'] === 'setup') {
+        route_setup();
+    } elseif ($_REQUEST['action'] === 'sa_password_reset') {
+        send_sa_password_reset();
+    } elseif ($_REQUEST['action'] === 'send_toggle_afk') {
+        check_session();
+        send_toggle_afk();
+    } elseif ($_REQUEST['action'] === 'add_link') {
+        check_session();
+        if ($U['status'] >= 5) { // Only allow admins to add links
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $link_data = [
+                    'url' => $_POST['url'] ?? '',
+                    'title' => $_POST['title'] ?? '', 
+                    'section' => $_POST['section'] ?? '',
+                    'network' => $_POST['network'] ?? '',
+                    'status' => $_POST['status'] ?? 1,
+                    'description' => $_POST['description'] ?? ''
+                ];
+                $result = add_link($link_data);
+                if (!is_string($result)) { // If no error message returned
+                    header('Location: ' . $_SERVER['SCRIPT_NAME'] . '?action=viewlinks&added=1');
+                    exit;
+                }
+                echo $result;
+            } else {
+                show_manageLink();
+            }
+        } else {
+            send_access_denied();
+        }
+    } elseif ($_REQUEST['action'] === 'delete_link') {
+        check_session();
+        if ($U['status'] >= 5) { // Only allow admins to delete links
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
+                $result = delete_link((int)$_POST['id']);
+                echo $result;
+            } else {
+                echo '<span class="error-msg">' . _('Invalid request') . '</span>';
+            }
+        } else {
+            send_access_denied(); 
+        }
+    } elseif ($_REQUEST['action'] === 'edit_link') {
+        check_session();
+        if ($U['status'] >= 5) { // Only allow admins to edit links
+            if (isset($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
+                if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    $result = edit_link((int)$_REQUEST['id'], $_POST);
+                    echo $result;
+                } else {
+                    show_edit_link_form((int)$_REQUEST['id']);
+                }
+            } else {
+                echo '<span class="error-msg">' . _('Invalid link ID') . '</span>';
+            }
+        } else {
+            send_access_denied();
+        }
+    } else {
+        send_login();
+    }
+}
+
+function delete_message(int $message_id): void {
+    global $U, $db;
+    
+    // Check if the user has access to delete the message
+    $stmt = $db->prepare('SELECT id, poster, postdate FROM ' . PREFIX . 'messages WHERE id = ?');
+    $stmt->execute([$message_id]);
+    $message = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // Only can delete own message within 10 minutes or if admin status
+    if ($message) {
+        $canDelete = false;
+        
+        if ($U['status'] >= 5) {
+            // Admin can delete all messages
+            $canDelete = true;
+        } else if ($message['poster'] === $U['nickname']) {
+            // Sender can delete their message within 10 minutes
+            $timeDiff = time() - $message['postdate']; 
+            if ($timeDiff <= 600) { // 600 seconds = 10 minutes
+                $canDelete = true;
+            }
         }
         
-    } catch (PDOException $e) {
-        // Log any other database errors
-        error_log("Database error while adding bad word: " . $e->getMessage());
-        return _('Database error - please contact administrator');
+        if ($canDelete) {
+            // Delete message from database
+            $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'messages WHERE id = ?');
+            $stmt->execute([$message_id]);
+            
+            // Delete from inbox if exists
+            $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'inbox WHERE postid = ?');
+            $stmt->execute([$message_id]);
+            
+            // Hapus bagian logging karena tabel tidak ada
+        }
     }
-}	
+    
+    // Refresh messages
+    send_messages();
+}
+function route_admin(): string {
+    global $U, $db;
+    if ($U['status'] < 5) {
+        send_access_denied();
+    }
+
+    if (!isset($_POST['do'])) {
+        return '';
+    } elseif ($_POST['do'] === 'clean') {
+        if ($_POST['what'] === 'choose') {
+            send_choose_messages();
+        } elseif ($_POST['what'] === 'selected') {
+            clean_selected((int)$U['status'], $U['nickname']); 
+        } elseif ($_POST['what'] === 'room') {
+            clean_room();
+        } elseif ($_POST['what'] === 'nick') {
+            $stmt = $db->prepare('SELECT null FROM ' . PREFIX . 'members WHERE nickname=? AND status>=?;');
+            $stmt->execute([$_POST['nickname'], $U['status']]);
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+                del_all_messages($_POST['nickname'], 0);
+            }
+        }
+    } elseif ($_POST['do'] === 'kick') {
+        if (isset($_POST['name'])) {
+            if (isset($_POST['what']) && $_POST['what'] === 'purge') {
+                kick_chatter($_POST['name'], $_POST['kickmessage'], true);
+            } else {
+                kick_chatter($_POST['name'], $_POST['kickmessage'], false);
+            }
+        }
+    } elseif ($_POST['do'] === 'logout') {
+        if (isset($_POST['name'])) {
+            logout_chatter($_POST['name']);
+        }
+    } elseif ($_POST['do'] === 'sessions') {
+        if (isset($_POST['kick']) && isset($_POST['nick'])) {
+            kick_chatter([$_POST['nick']], '', false);
+        } elseif (isset($_POST['logout']) && isset($_POST['nick'])) {
+            logout_chatter([$_POST['nick']]);
+        }
+        send_sessions();
+    } elseif ($_POST['do'] === 'register') {
+        return register_guest(3, $_POST['name']);
+    } elseif ($_POST['do'] === 'superguest') {
+        return register_guest(2, $_POST['name']);
+    } elseif ($_POST['do'] === 'status') {
+        return change_status($_POST['name'], $_POST['set']);
+    } elseif ($_POST['do'] === 'regnew') {
+        return register_new($_POST['name'], $_POST['pass']);
+    } elseif ($_POST['do'] === 'approve') {
+        approve_session();
+        send_approve_waiting();
+    } elseif ($_POST['do'] === 'guestaccess') {
+        if (isset($_POST['guestaccess']) && preg_match('/^[0123]$/', $_POST['guestaccess'])) {
+            update_setting('guestaccess', $_POST['guestaccess']);
+            change_guest_access(intval($_POST['guestaccess']));
+        }
+    } elseif ($_POST['do'] === 'filter') {
+        send_filter(manage_filter());
+    } elseif ($_POST['do'] === 'linkfilter') {
+        send_linkfilter(manage_linkfilter());
+    } elseif ($_POST['do'] === 'topic') {
+        if (isset($_POST['topic'])) {
+            update_setting('topic', htmlspecialchars($_POST['topic']));
+        }
+    } elseif ($_POST['do'] === 'passreset') {
+        return passreset($_POST['name'], $_POST['pass']);
+    } elseif ($_POST['do'] === 'add_word' && isset($_POST['new_word'])) {
+        return add_bad_word($_POST['new_word']);
+    } elseif ($_POST['do'] === 'delete_word' && isset($_POST['word_id'])) {
+        return delete_bad_word((int)$_POST['word_id']);
+    } 
+    return '';
+}
+function add_link(array $data): string {
+    global $db;
+    
+    // Validate required fields
+    $required = ['url', 'title', 'section', 'description', 'network'];
+    foreach ($required as $field) {
+        if (empty($data[$field])) {
+            return _("$field is required");
+        }
+    }
+
+    // Validate URL
+    if (!filter_var($data['url'], FILTER_VALIDATE_URL)) {
+        return _('Invalid URL format');
+    }
+
+    // Validate network type
+    if (!in_array($data['network'], ['clearnet', 'tor'])) {
+        return _('Invalid network type');
+    }
+
+    try {
+        // First check if table exists
+        $tableExists = $db->query("SHOW TABLES LIKE '" . PREFIX . "cyber_links'")->rowCount() > 0;
+        
+        // Create table if not exists with all required columns
+        if (!$tableExists) {
+            $db->exec('CREATE TABLE ' . PREFIX . 'cyber_links (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                url VARCHAR(255) NOT NULL,
+                title VARCHAR(100) NOT NULL,
+                section VARCHAR(50) NOT NULL,
+                network VARCHAR(10) NOT NULL DEFAULT "clearnet",
+                status TINYINT NOT NULL DEFAULT 1,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )');
+        } else {
+            // Check if network column exists
+            $columnExists = $db->query("SHOW COLUMNS FROM " . PREFIX . "cyber_links LIKE 'network'")->rowCount() > 0;
+            
+            // Add network column if it doesn't exist
+            if (!$columnExists) {
+                $db->exec('ALTER TABLE ' . PREFIX . 'cyber_links ADD COLUMN network VARCHAR(10) NOT NULL DEFAULT "clearnet" AFTER section');
+            }
+        }
+
+        $stmt = $db->prepare('INSERT INTO ' . PREFIX . 'cyber_links
+            (url, title, section, network, status, description) 
+            VALUES (?, ?, ?, ?, ?, ?)');
+            
+        $result = $stmt->execute([
+            trim($data['url']),
+            trim($data['title']), 
+            strtoupper(trim($data['section'])), // Convert section to uppercase
+            trim($data['network']),
+            (int)$data['status'],
+            trim($data['description'])
+        ]);
+
+        if ($result) {
+            // Redirect after successful add
+            header('Location: ' . $_SERVER['SCRIPT_NAME'] . '?action=viewlinks&added=1');
+            exit;
+        }
+
+        error_log('Database error: ' . json_encode($stmt->errorInfo()));
+        return '<span class="error-msg">' . _('Error adding link') . '</span>';
+
+    } catch (PDOException $e) {
+        error_log("Error adding link: " . $e->getMessage());
+        return '<span class="error-msg">' . _('Database error: ') . htmlspecialchars($e->getMessage()) . '</span>';
+    }
+}
+// function delete logic
+function delete_link(int $link_id): string {
+    global $db;
+    
+    if (empty($link_id)) {
+        return _('Link ID is required');
+    }
+
+    try {
+        $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'cyber_links WHERE id = ?');
+        $stmt->execute([$link_id]);
+
+        if ($stmt->rowCount() > 0) {
+            // Redirect after successful delete
+            header('Location: ' . $_SERVER['SCRIPT_NAME'] . '?action=viewlinks&deleted=1');
+            exit;
+        }
+        
+        return '<span class="error-msg">' . _('Link not found') . '</span>';
+
+    } catch (PDOException $e) {
+        error_log("Error deleting link ID $link_id: " . $e->getMessage());
+        return '<span class="error-msg">' . _('Error deleting link') . '</span>';
+    }
+}
+
+// function edit link
+function edit_link(int $id, array $data): string {
+    global $db;
+    
+    if (empty($id)) {
+        return _('Link ID is required');
+    }
+
+    $updateFields = [];
+    $params = [];
+    
+    // Build dynamic update query
+    foreach (['url', 'title', 'section', 'status', 'description', 'network'] as $field) {
+        if (isset($data[$field])) {
+            $updateFields[] = "$field = ?";
+            $params[] = trim($data[$field]);
+        }
+    }
+    
+    if (empty($updateFields)) {
+        return _('No fields to update');
+    }
+
+    try {
+        $params[] = $id;
+        $sql = 'UPDATE ' . PREFIX . 'cyber_links SET ' . implode(', ', $updateFields) . ' WHERE id = ?';
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+
+        if ($stmt->rowCount() > 0) {
+            header('Location: ' . $_SERVER['SCRIPT_NAME'] . '?action=viewlinks&updated=1');
+            exit;
+        }
+        return '<span class="error-msg">' . _('Link not found or no changes made') . '</span>';
+    } catch (PDOException $e) {
+        error_log("Error updating link ID $id: " . $e->getMessage());
+        return _('Error updating link');
+    }
+
+    // Redirect after successful update
+    header('Location: ' . $_SERVER['SCRIPT_NAME'] . '?action=viewlinks&updated=1');
+    exit;
+}
+function show_manageLink(): void {
+	global $U, $db;
+
+	// Check if table exists, create if not
+	$tableExists = $db->query("SHOW TABLES LIKE '" . PREFIX . "cyber_links'")->rowCount() > 0;
+	
+	if (!$tableExists) {
+		$db->exec('CREATE TABLE ' . PREFIX . 'cyber_links (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			url VARCHAR(255) NOT NULL,
+			title VARCHAR(100) NOT NULL,
+			section VARCHAR(50) NOT NULL,
+			network VARCHAR(10) NOT NULL DEFAULT "clearnet",
+			status TINYINT NOT NULL DEFAULT 1,
+			description TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)');
+	}
+	
+	// Get links after any updates
+	$links = $db->query('SELECT * FROM ' . PREFIX . 'cyber_links ORDER BY created_at DESC')->fetchAll();
+	
+	// Send proper headers
+	header('Content-Type: text/html; charset=UTF-8');
+	?>
+	<!DOCTYPE html>
+	<html lang="en" dir="ltr">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="referrer" content="no-referrer">
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+		<title>DanChat - Manage Links</title>
+		<link rel="stylesheet" href="./css/control.css">
+		<link rel="icon" href="./icon.svg" type="image/svg+xml">
+		<style>
+			.edit-form { display: none; }
+			.edit-form.active { display: block; }
+			table { width: 100%; border-collapse: collapse; }
+			th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+			th { background-color: #f4f4f4; }
+			.btn-edit, .btn-delete { padding: 5px 10px; margin: 2px; }
+			.status-active { color: green; }
+			.status-inactive { color: red; }
+		</style>
+	</head>
+	<body class="show_manageLink">
+		<div class="manage-links">
+			<h2><?php echo _('Manage Links'); ?></h2>
+			
+			<!-- Add new link form -->
+			<form method="post" action="<?php echo $_SERVER['SCRIPT_NAME']; ?>" class="add-link-form">
+				<h3><?php echo _('Add New Link'); ?></h3>
+				<input type="hidden" name="action" value="add_link">
+				
+				<div class="form-group">
+					<label for="url"><?php echo _('URL'); ?> *</label>
+					<input type="url" id="url" name="url" placeholder="https://example.com" required pattern="https?://.+">
+					<small class="form-help"><?php echo _('Must start with http:// or https://'); ?></small>
+				</div>
+				
+				<div class="form-group">
+					<label for="title"><?php echo _('Title'); ?> *</label>
+					<input type="text" id="title" name="title" maxlength="100" required>
+					<small class="form-help"><?php echo _('Maximum 100 characters'); ?></small>
+				</div>
+				
+				<div class="form-group">
+					<label for="section"><?php echo _('Section').' ('.strtoupper(_('Section')).')'; ?> *</label>
+					<input type="text" id="section" name="section" maxlength="50" required>
+					<small class="form-help"><?php echo _('Maximum 50 characters'); ?></small>
+				</div>
+				
+				<div class="form-group">
+					<label for="network"><?php echo _('Network Type'); ?> *</label>
+					<select id="network" name="network" required>
+						<option value=""><?php echo '-- ' . _('Select Network') . ' --'; ?></option>
+						<option value="clearnet"><?php echo _('Clearnet'); ?></option>
+						<option value="tor"><?php echo _('Tor'); ?></option>
+					</select>
+				</div>
+				
+				<div class="form-group">
+					<label for="status"><?php echo _('Status'); ?> *</label>
+					<select id="status" name="status" required>
+						<option value="1"><?php echo _('Active'); ?></option>
+						<option value="0"><?php echo _('Inactive'); ?></option>
+					</select>
+				</div>
+				
+				<div class="form-group">
+					<label for="description"><?php echo _('Description'); ?> *</label>
+					<textarea id="description" name="description" maxlength="500" required rows="4"></textarea>
+					<small class="form-help"><?php echo _('Maximum 500 characters'); ?></small>
+				</div>
+				
+				<p class="required-note">* <?php echo _('Required fields'); ?></p>
+				<button type="submit" class="btn-submit"><?php echo _('Add Link'); ?></button>
+			</form>
+	
+			<!-- Display existing links -->
+			<div class="links-list">
+				<h3><?php echo _('Existing Links'); ?></h3>
+				
+				<?php if (empty($links)): ?>
+					<p class="no-links"><?php echo _('No links found'); ?></p>
+				<?php else: ?>
+					<table>
+						<thead>
+							<tr>
+								<th><?php echo _('Title'); ?></th>
+								<th><?php echo _('URL'); ?></th>
+								<th><?php echo _('Section'); ?></th>
+								<th><?php echo _('Network'); ?></th>
+								<th><?php echo _('Status'); ?></th>
+								<th><?php echo _('Description'); ?></th>
+								<th><?php echo _('Actions'); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ($links as $link): ?>
+							<tr>
+								<td><?php echo htmlspecialchars($link['title']); ?></td>
+								<td><a href="<?php echo htmlspecialchars($link['url']); ?>" target="_blank"><?php echo htmlspecialchars($link['url']); ?></a></td>
+								<td><?php echo htmlspecialchars($link['section']); ?></td>
+								<td><?php echo _(ucfirst($link['network'])); ?></td>
+								<td><span class="status-<?php echo $link['status'] ? 'active' : 'inactive'; ?>"><?php echo $link['status'] ? _('Active') : _('Inactive'); ?></span></td>
+								<td><?php echo htmlspecialchars($link['description']); ?></td>
+								<td>
+									<button onclick="toggleEdit(<?php echo $link['id']; ?>)" class="btn-edit"><?php echo _('Edit'); ?></button>
+									<form method="post" action="<?php echo $_SERVER['SCRIPT_NAME']; ?>" class="delete-form" style="display:inline" onsubmit="return confirm('<?php echo _('Are you sure?'); ?>')">
+										<input type="hidden" name="action" value="delete_link">
+										<input type="hidden" name="id" value="<?php echo $link['id']; ?>">
+										<button type="submit" class="btn-delete"><?php echo _('Delete'); ?></button>
+									</form>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="7">
+									<form method="post" action="<?php echo $_SERVER['SCRIPT_NAME']; ?>" class="edit-form" id="edit-form-<?php echo $link['id']; ?>">
+										<input type="hidden" name="action" value="edit_link">
+										<input type="hidden" name="id" value="<?php echo $link['id']; ?>">
+										
+										<div class="form-group">
+											<label><?php echo _('URL'); ?>:</label>
+											<input type="url" name="url" value="<?php echo htmlspecialchars($link['url']); ?>" required>
+										</div>
+										
+										<div class="form-group">
+											<label><?php echo _('Title'); ?>:</label>
+											<input type="text" name="title" value="<?php echo htmlspecialchars($link['title']); ?>" required>
+										</div>
+										
+										<div class="form-group">
+											<label><?php echo _('Section'); ?>:</label>
+											<input type="text" name="section" value="<?php echo htmlspecialchars($link['section']); ?>" required>
+										</div>
+										
+										<div class="form-group">
+											<label><?php echo _('Network'); ?>:</label>
+											<select name="network" required>
+												<option value="clearnet" <?php echo $link['network'] === 'clearnet' ? 'selected' : ''; ?>><?php echo _('Clearnet'); ?></option>
+												<option value="tor" <?php echo $link['network'] === 'tor' ? 'selected' : ''; ?>><?php echo _('Tor'); ?></option>
+											</select>
+										</div>
+										
+										<div class="form-group">
+											<label><?php echo _('Status'); ?>:</label>
+											<select name="status" required>
+												<option value="1" <?php echo $link['status'] == 1 ? 'selected' : ''; ?>><?php echo _('Active'); ?></option>
+												<option value="0" <?php echo $link['status'] == 0 ? 'selected' : ''; ?>><?php echo _('Inactive'); ?></option>
+											</select>
+										</div>
+										
+										<div class="form-group">
+											<label><?php echo _('Description'); ?>:</label>
+											<textarea name="description" required><?php echo htmlspecialchars($link['description']); ?></textarea>
+										</div>
+										
+										<button type="submit" class="btn-submit"><?php echo _('Update'); ?></button>
+									</form>
+								</td>
+							</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+		</div>
+
+		<script>
+		function toggleEdit(id) {
+			const form = document.getElementById('edit-form-' + id);
+			form.classList.toggle('active');
+		}
+		</script>
+	</body>
+	</html>
+	<?php
+}
+
+function delete_bad_word(int $word_id): string {
+	global $db;
+
+	try {
+		$stmt = $db->prepare('DELETE FROM ' . PREFIX . 'bad_words WHERE id = ?');
+		$stmt->execute([$word_id]);
+
+		if ($stmt->rowCount() > 0) {
+			return '<span style="color:red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad Name deleted successfully') . '</span>';
+		} else {
+			return '<span style="color: red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad Name not found') . '</span>';
+		}
+
+	} catch (PDOException $e) {
+		error_log("Error deleting bad name ID $word_id: " . $e->getMessage());
+		return _('Error deleting bad name');
+	}
+}
+
+function add_bad_word(string $word): string {
+	global $db;
+
+	$word = trim($word);
+	if (empty($word)) {
+		return _('Word cannot be empty');
+	}
+
+	if (mb_strlen($word) > 255) {
+		return _('Word is too long (maximum 255 characters)');
+	}
+
+	try {
+		$stmt = $db->prepare('SELECT COUNT(*) FROM ' . PREFIX . 'bad_words WHERE word = ?');
+		$stmt->execute([$word]);
+		if ($stmt->fetchColumn() > 0) {
+			return _('Word already exists in bad words list');
+		}
+
+		$db->exec('CREATE TABLE IF NOT EXISTS ' . PREFIX . 'bad_words (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			word VARCHAR(255) NOT NULL UNIQUE
+		)');
+
+		try {
+			$stmt = $db->prepare('INSERT INTO ' . PREFIX . 'bad_words (word) VALUES (?)');
+			$stmt->execute([$word]);
+
+			if ($stmt->rowCount() > 0) {
+				return '<span style="color:red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Bad name added successfully') . '</span>';
+			} else {
+				return '<span style="color: red; font-weight: bold; padding: 5px; border-radius: 3px; background: rgba(0,20,0,0.5);">' . _('Failed to add bad name') . '</span>';
+			}
+		} catch (PDOException $e) {
+			error_log("Failed to insert bad word: " . $e->getMessage());
+			return _('Error adding bad word - please try again');
+		}
+
+	} catch (PDOException $e) {
+		error_log("Database error while adding bad word: " . $e->getMessage());
+		return _('Database error - please contact administrator');
+	}
+}
 function route_setup(): void
 {
 	global $U;
@@ -358,7 +793,6 @@ function route_setup(): void
 		'hide_rearrange' => _('Hide rearrange button'),
 		'hide_help' => _('Hide help button'),
 		'postbox_delete_globally' => _('Apply postbox delete button globally'),
-		'allow_js' => _('Allow enhancing functionality with JavaScript'),
 	];
 	$C['colour_settings']=[
 		'colbg' => _('Background colour'),
@@ -450,63 +884,1042 @@ function route_setup(): void
 //  html output subs
 function prepare_stylesheets(string $class): void
 {
-	global $U, $db, $scripts, $styles;
+	global $U, $db,  $styles;
 	if($class === 'fatal_error') {
-		$styles[ './style.css' ] = 'body{background-color:#000000;color:#FF0033}';
+		$styles [] = 'body{background-color:#000000;color:#FF0033}';
 	}
 	if($class === 'init' || ! $db instanceof PDO){
 		return;
 	}
-	// styles CSS
-    $styles['default'] = './style.css';
-	$css=get_setting('css');
 	$coltxt=get_setting('coltxt');
 	if(!empty($U['bgcolour'])){
 		$colbg=$U['bgcolour'];
 	}else{
 		$colbg=get_setting('colbg');
 	}
-	$allow_js = (bool) get_setting('allow_js');
-	if($allow_js){
-		$scripts['default'] = 'if(window.history.replaceState){window.history.replaceState(null,"");}';
-		if($class === 'frameset') {
-			$scripts[ 'frameset' ] = 'window.addEventListener("message", (e)=>{
-				if(e.data === "post_box_loaded"){
-					let autofocus = document.querySelector("iframe[name=post").contentDocument.querySelector("input[autofocus]");
-					if(autofocus){
-						autofocus.focus();
-					}
-				}
-			});';
-		}
-		if($class === 'post') {
-			$scripts[ 'post' ] = 'window.addEventListener("load", _=>{
-				window.top.postMessage("post_box_loaded", window.location.origin);
-			})';
-		}
-	}
 }
-
 function print_stylesheet(string $class): void
 {
-	global $scripts, $styles;
-	//default css
-    foreach($styles as $style) {         echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"$style\">";     } 	
-	echo "<style>$styles[default]</style>";
-	if ( $class === 'init' ) {
+	global $styles;
+	
+	// Try loading external CSS first
+	foreach($styles as $style) {
+		echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"$style\">";
+	}
+	// Fallback inline CSS if external blocked
+	echo '<style>
+	.msg {padding: 0.5em 0; border-bottom: 1px solid #363636;}
+input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; border-radius: 0.5em;}
+#messages small {color: #989898;}
+#messages {display: block; width: 80%;}
+.messages #topic {display: block; width: 80%;}
+.messages #chatters {
+  display: block;
+  float: right;
+  width: 15%;
+  overflow-y: auto;
+  position: fixed;
+  right: 0;
+  max-height: 100%;
+  top: 2em;
+  text-decoration: none;
+  bottom: 2em;
+  background: rgba(0, 20, 20, 0.8);
+  border-left: 1px solid #00ff00;
+  box-shadow: -2px 0 10px rgba(0, 255, 0, 0.096);
+  scrollbar-width: thin;
+  scrollbar-color: #00ff00 #000;
+  padding: 10px; 
+}
+
+.messages #chatters td, 
+.messages #chatters tr, 
+.messages #chatters th {
+  display: table-row;
+  border-bottom: 1px solid rgba(0, 255, 0, 0.1);
+}
+#chatters, 
+#chatters table {
+  font-weight: bolder;
+  border-spacing: 0px;
+  width: 100%;
+  font-size:15px ;
+}
+#manualrefresh {
+  display: block;
+  position: fixed;
+  text-align: center;
+  left: 25%;
+  width: 50%;
+  top: -200%;
+  animation: timeout_messages 25s forwards;
+  z-index: 2;
+  background-color: #500000;
+}
+.msg {
+  max-height: 180px;
+  overflow-y: auto;
+  background-color: rgba(100,100,100,0.4);
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.messages #chatters table a {
+  display: table-row;
+  text-decoration: none;
+  color: #ffffff;
+  transition: all 0.2s ease;
+  font-family: "Fira Code", monospace;
+}
+.messages #chatters .afk-badge {
+  color: #ff0000; 
+  font-size: 10px; 
+  text-align: center;
+  font-weight: bold; 
+  text-transform: uppercase; 
+
+  margin-left: 2px; 
+  display: inline-flex;
+  align-items: center;
+}
+body, iframe {
+    background-color: #000000;
+    color: #FFFFFF;
+    font-family: "monospace", system-ui;
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+.post {
+    margin-top: 10px;
+}
+#rules-style {
+    color: red;
+    font-weight: bold;
+    padding-left: 10px;
+}
+#about-style {
+    color: rgb(0, 255, 0);
+    font-weight: bold;
+    font-size: 14px;
+    padding-left: 10px;
+}
+#topic {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+a:visited { color: #B33CB4; }
+a:link { color: #00A2D4; }
+a:active { color: #55A2D4; }
+input[type=text], input[type=password], input[type=submit], select, textarea {
+    border: none;
+    background-color: rgba(120,120,120,0.3);
+    font-family: "monospace", system-ui;
+    color: #fff !important;
+    padding: 5px;
+    border-radius: 10px;
+}
+.error { color: #FF0033; text-align: left; }
+.delbutton { background-color: #660000; }
+.backbutton { background-color: #004400; }
+#exitbutton { background-color: #AA0000; }
+.setup table table,
+.admin table table,
+.profile table table {
+    width: 100%;
+    text-align: left;
+}
+.alogin table, .init table, .destroy_chat table, .delete_account table,
+.sessions table, .filter table, .linkfilter table, .notes table,
+.approve_waiting table, .del_confirm table, .profile table,
+.admin table, .backup table, .setup table {
+    margin-left: auto;
+    margin-right: auto;
+}
+.setup table table table,
+.admin table table table,
+.profile table table table {
+    border-spacing: 0px;
+    margin-left: auto;
+    margin-right: unset;
+    width: unset;
+}
+.setup table table td, .backup #restoresubmit, .backup #backupsubmit,
+.admin table table td, .profile table table td, .login td+td,
+.alogin td+td {
+    text-align: right;
+}
+.init td, .backup #restorecheck td, .admin #clean td, .admin #regnew td,
+.session td, .messages, .inbox, .approve_waiting td, .choose_messages,
+.greeting, .help, .login td, .alogin td {
+    text-align: left;
+}
+.approve_waiting #action td:only-child, .help #backcredit,
+.login td:only-child, .alogin td:only-child, .init td:only-child {
+    text-align: center;
+}
+.sessions td, .sessions th, .approve_waiting td, .approve_waiting th {
+    padding: 5px;
+}
+.sessions td td { padding: 1px; }
+.notes textarea { height: 80vh; width: 80%; }
+.post table, .controls table, .login table {
+    border-spacing: 0px;
+    margin-left: auto;
+    margin-right: auto;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1; 
+    transform: translateY(0);
+  }
+}
+
+@keyframes glitch {
+  0% {
+    text-shadow: 2px 2px #00ff00, -2px -2px #ff0000;
+  }
+  25% {
+    text-shadow: -2px 2px #00ff00, 2px -2px #ff0000;
+  }
+  50% {
+    text-shadow: 2px -2px #00ff00, -2px 2px #ff0000;
+  }
+  75% {
+    text-shadow: -2px -2px #00ff00, 2px 2px #ff0000;
+  }
+  100% {
+    text-shadow: 2px 2px #00ff00, -2px -2px #ff0000;
+  }
+}
+
+@keyframes matrixBg {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
+}
+
+.login {
+  background-color: rgba(0,0,0,0.8); 
+  background-image: url("./danchat.svg");
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: overlay;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.login::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6));
+  z-index: -1;
+}
+
+#login_table {
+  background: rgba(0,20,20,0.8);
+backdrop-filter: blur(10px);
+  padding: 35px;  
+  padding-top: 10px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,255,0,0.2);
+  box-shadow: 0 0 10px rgba(57,255,20,0.5);
+  animation: fadeIn 1s ease-out;
+  max-width: auto;
+width: 400px;
+  margin: 20px auto;
+}
+
+#nickname_input,
+#password_input,
+#regpass_input,
+#globalpass_input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  background: rgba(0,20,20,0.6);
+  border: 1px solid rgba(0,255,0,0.3);
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  transition: all 0.3s ease;
+}
+
+#nickname_input:focus,
+#password_input:focus,
+#regpass_input:focus,
+#globalpass_input:focus {
+  border-color: #00ff00;
+  box-shadow: 0 0 10px rgba(0,255,0,0.3);
+  outline: none;
+}
+
+#nickname_label,
+#password_label,
+#regpass_label,
+#globalpass_label {
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.9em;
+  text-shadow: 0 0 5px rgba(0,255,0,0.5);
+}
+
+#submit_button,
+#submit_btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(45deg, #330000, #006600);
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  font-family: "Courier New", monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#submit_button:hover,
+#submit_btn:hover {
+  background: linear-gradient(45deg, #b90404, #990000);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+  transform: scale(1.02);
+}
+
+
+.cyber-glitch-title {
+    font-family: "Fira Code", monospace;
+    font-weight: 900;
+    font-size: 1.8em;
+    position: relative;
+    text-align: center;
+    color: #0f0;
+    text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+    padding: 20px;
+    background: rgba(0,20,0,0.2);
+    border-radius: 5px;
+    margin: 30px auto;
+    max-width: 400px;
+    box-sizing: border-box;
+    animation: matrixRain 2s infinite;
+    overflow: hidden;
+}
+
+.cyber-glitch-title::before,
+.cyber-glitch-title::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,10,0,0.2);
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.cyber-glitch-title::before {
+    left: 3px;
+    text-shadow: -2px 0 #ff0000;
+    animation: glitchEffect1 750ms infinite;
+    background: rgba(255,0,0,0.1);
+    transform: skew(-20deg);
+}
+
+.cyber-glitch-title::after {
+    left: -3px; 
+    text-shadow: 2px 0 #0000ff;
+    animation: glitchEffect2 375ms infinite;
+    background: rgba(0,0,255,0.1);
+    transform: skew(20deg);
+}
+
+@keyframes matrixRain {
+    0% {
+        box-shadow: 
+            inset 0 0 15px #0f0,
+            0 0 30px #0f0;
+    }
+    50% {
+        box-shadow:
+            inset 0 0 30px #0f0, 
+            0 0 60px #0f0;
+    }
+    100% {
+        box-shadow:
+            inset 0 0 15px #0f0,
+            0 0 30px #0f0;
+    }
+}
+
+@keyframes glitchEffect1 {
+    0% {
+        clip-path: polygon(0 15%, 100% 15%, 100% 30%, 0 30%);
+        transform: translate(-2px, 2px);
+    }
+    30% {
+        clip-path: polygon(0 40%, 100% 40%, 100% 55%, 0 55%);
+        transform: translate(2px, -2px);
+    }
+    60% {
+        clip-path: polygon(0 65%, 100% 65%, 100% 80%, 0 80%);
+        transform: translate(-2px, -2px);
+    }
+    100% {
+        clip-path: polygon(0 85%, 100% 85%, 100% 100%, 0 100%);
+        transform: translate(2px, 2px);
+    }
+}
+
+@keyframes glitchEffect2 {
+    0% {
+        clip-path: polygon(0 10%, 100% 10%, 100% 35%, 0 35%);
+        transform: translate(2px);
+    }
+    35% {
+        clip-path: polygon(0 40%, 100% 40%, 100% 65%, 0 65%);
+        transform: translate(-2px);
+    }
+    70% {
+        clip-path: polygon(0 70%, 100% 70%, 100% 95%, 0 95%);
+        transform: translate(2px);
+    }
+    100% {
+        clip-path: polygon(0 85%, 100% 85%, 100% 100%, 0 100%);
+        transform: translate(-2px);
+    }
+}
+
+@keyframes cyberGlitch2 {
+    0% {
+        clip: rect(20px, 9999px, 100px, 0);
+        transform: skew(-0.4deg);
+    }
+    25% {
+        clip: rect(70px, 9999px, 15px, 0);
+        transform: skew(-0.5deg);
+    }
+    50% {
+        clip: rect(80px, 9999px, 30px, 0);
+        transform: skew(-0.7deg);
+    }
+    75% {
+        clip: rect(60px, 9999px, 80px, 0);
+        transform: skew(-0.3deg);
+    }
+    100% {
+        clip: rect(15px, 9999px, 40px, 0);
+        transform: skew(-0.4deg);
+    }
+}
+@media screen and (max-width: 768px) {
+    .cyber-glitch-title {
+        font-size: 1.2em; 
+        padding: 10px;
+        max-width: 80%; 
+        letter-spacing: 2px; 
+        margin: 20px auto; 
+    }
+
+    .cyber-glitch-title::before,
+    .cyber-glitch-title::after {
+        padding: 10px;
+    }
+
+    .cyber-glitch-title::before {
+        left: 2px;
+        text-shadow: -2px 0 #ff0000;
+        clip: rect(20px, 450px, 80px, 0);
+    }
+
+    .cyber-glitch-title::after {
+        left: -2px;
+        text-shadow: 2px 0 #0000ff;
+        clip: rect(70px, 450px, 120px, 0);
+    }
+
+    @keyframes cyberGlitch {
+        0% {
+            clip: rect(30px, 999px, 40px, 0);
+            transform: skew(0.3deg);
+        }
+        20% {
+            clip: rect(10px, 999px, 50px, 0);
+            transform: skew(0.2deg);
+        }
+        40% {
+            clip: rect(40px, 999px, 20px, 0);
+            transform: skew(0.5deg);
+        }
+        60% {
+            clip: rect(30px, 999px, 60px, 0);
+            transform: skew(0.1deg);
+        }
+        80% {
+            clip: rect(50px, 999px, 10px, 0);
+            transform: skew(0.3deg);
+        }
+        100% {
+            clip: rect(20px, 999px, 40px, 0);
+            transform: skew(0.4deg);
+        }
+    }
+
+    @keyframes cyberGlitch2 {
+        0% {
+            clip: rect(15px, 999px, 80px, 0);
+            transform: skew(-0.3deg);
+        }
+        25% {
+            clip: rect(60px, 999px, 10px, 0);
+            transform: skew(-0.4deg);
+        }
+        50% {
+            clip: rect(70px, 999px, 20px, 0);
+            transform: skew(-0.5deg);
+        }
+        75% {
+            clip: rect(50px, 999px, 70px, 0);
+            transform: skew(-0.2deg);
+        }
+        100% {
+            clip: rect(10px, 999px, 30px, 0);
+            transform: skew(-0.3deg);
+        }
+    }
+}
+
+#system_protocols {
+  font-family: "Courier New", monospace;
+  color: #00ff00;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 20px;
+  text-align: center;
+  margin-top: 20px;
+  position: relative;
+  animation: matrix-glitch 0.3s linear infinite;
+}
+
+#system_protocols::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  text-shadow: -2px 0 #ff00ff;
+  clip: rect(0, 0, 0, 0);
+  animation: matrix-glitch 0.5s linear infinite alternate-reverse;
+}
+
+#system_protocols::after {
+  content: attr(data-text); 
+  position: absolute;
+  left: -2px;
+  text-shadow: -2px 0 #00ffff;
+  clip: rect(0, 0, 0, 0);
+  animation: matrix-glitch 0.8s linear infinite alternate-reverse;
+}
+
+@keyframes matrix-glitch {
+  0% { clip: rect(0, 900px, 0, 0); }
+  20% { clip: rect(44px, 900px, 56px, 0); }
+  40% { clip: rect(20px, 900px, 100px, 0); }
+  60% { clip: rect(10px, 900px, 25px, 0); }
+  80% { clip: rect(30px, 900px, 80px, 0); }
+  100% { clip: rect(0, 900px, 0, 0); }
+}
+
+.cyber-glitch-title::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: calc(100% + 10px);
+    height: calc(100% + 10px);
+    border-radius: 10px;
+}
+
+
+#rules_text {
+  color: #ff0000;
+  font-family: "Courier New", monospace;
+  line-height: 1.6;
+  font-size: 14px;
+  text-align: center;
+  font-weight: bolder;
+}
+
+#changelang {
+  margin-top: 30px;
+  text-align: center;
+}
+#topic {
+  position: block;
+  background-color: #000000;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+#captcha img {
+width: 100%;
+height: 30%;
+}
+#langSelect {
+  background: rgba(0,20,20,0.6);
+  color: #00ff00;
+  border: 1px solid rgba(0,255,0,0.3);
+  padding: 10px;
+  font-family: "Courier New", monospace;
+  cursor: pointer;
+}
+
+#chatters a {
+  color:white;
+  font-size: smaller;
+}
+
+.controls #donatebutton {
+  background-color: #e5ff00;
+  color: #000000;
+  border: 1px solid #d9ff00;
+  border-radius: 10px;
+  font-family: "Courier New", monospace;
+}
+td#color_label {
+  color: #00ff00;
+  padding: 10px;
+}
+#messages div .hapus{
+  color: red;
+  float: right;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1em;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px #000;
+}
+.cyber-container {
+  padding: 2rem;
+  margin: 20px;
+}
+.glitch-wrapper {
+  margin-bottom: 2rem;
+}
+.cyber-glitch {
+  color: #0ff;
+  font-family: "Courier New", monospace;
+  text-shadow: 2px 2px #ff00ff;
+  position: relative;
+  animation: glitch 1s infinite;
+}
+.cyber-glitch::before {
+  content: attr(data-text);
+  position: absolute;
+  left: -2px;
+  text-shadow: -2px 0 red;
+  background: black;
+  overflow: hidden;
+  top: 0;
+  animation: noise-1 2s linear infinite alternate-reverse;
+}
+.cyber-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  text-shadow: -2px 0 blue;
+  background: black;
+  overflow: hidden;
+  top: 0;
+  animation: noise-2 3s linear infinite alternate-reverse;
+}
+.matrix-text {
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  text-shadow: 0 0 5px #00ff00;
+  margin: 1rem 0;
+}
+.cyber-warning {
+  color: #ff0000;
+  font-family: "Courier New", monospace;
+  text-shadow: 0 0 5px #ff0000;
+  margin: 1rem 0;
+}
+.cyber-button {
+  background: transparent;
+  border: 2px solid #0ff;
+  color: #0ff;
+  padding: 10px 20px;
+  font-family: "Courier New", monospace;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.cyber-button:hover {
+  background: #0ff;
+  color: #000;
+  box-shadow: 0 0 20px #0ff;
+}
+@keyframes glitch {
+  2%, 64% { transform: translate(2px,0) skew(0deg); }
+  4%, 60% { transform: translate(-2px,0) skew(0deg); }
+  62% { transform: translate(0,0) skew(5deg); }
+}
+@keyframes noise-1 {
+  0%, 20%, 40%, 60%, 70%, 90% {clip-path: inset(80% 0 0 0);}
+  10%, 30%, 50%, 80%, 100% {clip-path: inset(0 0 80% 0);}
+}
+@keyframes noise-2 {
+  0%, 20%, 40%, 60%, 70%, 90% {clip-path: inset(80% 0 0 0);}
+  10%, 30%, 50%, 80%, 100% {clip-path: inset(0 0 80% 0);}
+}
+.warnss{
+color:red;
+}
+#frameset-mid {
+  position: fixed;
+  top: 120px;
+  bottom: 45px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#frameset-top {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  right: 0;
+  height: 120px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-bottom: 1px solid;
+}
+
+#frameset-bot {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-top: 1px solid;
+}
+
+.filter table table {
+  width: 100%;
+}
+
+.filter table table td:nth-child(1) {
+  width: 8em;
+  font-weight: bold;
+}
+
+.filter table table td:nth-child(2),
+.filter table table td:nth-child(3) {
+  width: 12em;
+}
+
+.filter table table td:nth-child(4) {
+  width: 9em;
+}
+
+.filter table table td:nth-child(5),
+.filter table table td:nth-child(6),
+.filter table table td:nth-child(7),
+.filter table table td:nth-child(8) {
+  width: 5em;
+}
+
+.linkfilter table table {
+  width: 100%;
+}
+
+.linkfilter table table td:nth-child(1) {
+  width: 8em;
+  font-weight: bold;
+}
+
+.linkfilter table table td:nth-child(2),
+.linkfilter table table td:nth-child(3) {
+  width: 12em;
+}
+
+.linkfilter table table td:nth-child(4),
+.linkfilter table table td:nth-child(5) {
+  width: 5em;
+}
+
+#chatters {
+  padding: 10px;
+}
+
+#chatters, 
+#chatters table {
+  border-spacing: 0px;
+}
+
+#manualrefresh {
+  display: block;
+  position: fixed;
+  text-align: center;
+  left: 25%;
+  width: 50%;
+  top: -200%;
+  animation: timeout_messages 20s forwards;
+  z-index: 2;
+  background-color: #500000;
+}
+
+@keyframes timeout_messages {
+  0% { top: -200%; }
+  99% { top: -200%; }
+  100% { top: 0%; }
+}
+
+.msg {
+  max-height: 180px;
+  overflow-y: auto;
+  background-color: rgba(100,100,100,0.4);
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+#bottom_link {
+  position: fixed;
+  top: 0.5em;
+  right: 0.5em;
+}
+
+#top_link {
+  position: fixed;
+  bottom: 0.5em;
+  right: 0.5em;
+}
+
+#chatters th,
+#chatters td {
+  vertical-align: top;
+}
+
+a img {
+  width: 15%;
+}
+
+a:hover img {
+  width: 35%;
+}
+
+#messages {
+  word-wrap: break-word;
+  padding: 10px;
+}
+body.admin .admin-panel {
+  background: #000000;
+  color: #0f0;
+  border: 1px solid #1a1a1a;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0,255,0,0.2);
+}
+
+body.admin .admin-panel h2 {
+  color: rgb(255, 255, 255);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+body.admin .admin-section {
+  background: #111;
+  border: 1px solid #222;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 3px;
+}
+
+body.admin .admin-section th {
+  color: rgb(255, 255, 255);
+  font-size: 1.1em;
+  padding: 10px;
+  text-transform: uppercase;
+}
+
+body.admin select, 
+body.admin input[type="text"], 
+body.admin input[type="password"] {
+  background: #000;
+  border: 1px solid #0f0;
+  color: #0f0;
+  padding: 8px;
+  border-radius: 3px;
+  margin: 5px;
+}
+
+body.admin select:focus, 
+body.admin input:focus {
+  box-shadow: 0 0 5px #0f0;
+  outline: none;
+}
+
+body.admin input[type="submit"] {
+  background: #000;
+  color: #0f0;
+  border: 1px solid #0f0;
+  padding: 8px 15px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+body.admin input[type="submit"]:hover {
+  background: #0f0;
+  color: #000;
+  box-shadow: 0 0 10px #0f0;
+}
+
+body.admin .delbutton {
+  background: #300;
+  border-color: #f00;
+  color: #f00;
+}
+
+body.admin .delbutton:hover {
+  background: #f00;
+  color: #000;
+  box-shadow: 0 0 10px #f00;
+}
+
+body.admin .status-message {
+  color: rgb(255, 60, 0);
+  text-align: center;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #0f0;
+  background: rgba(0,20,0,0.5);
+}
+
+body.admin .badwords-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+body.admin .badwords-table th,
+body.admin .badwords-table td {
+  padding: 10px;
+  border: 1px solid #222;
+}
+
+body.admin .badwords-table tr:hover {
+  background: rgba(0,255,0,0.1);
+}
+
+body.admin .btn {
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+body.admin .btn-primary {
+  background: #000;
+  color: #0f0;
+  border: 1px solid #0f0;
+}
+
+body.admin .btn-danger {
+  background: #000;
+  color: #f00;
+  border: 1px solid #f00;
+}
+
+body.admin .btn:hover {
+  box-shadow: 0 0 10px currentColor;
+}
+
+
+#navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+}
+
+#navbar a {
+  color: #e4e4e4;
+  text-decoration: none;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 14px;
+  font-weight: bolder;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  margin: 0 5px;
+}
+
+#navbar a:hover {
+  color: #ffffff;
+  background: rgba(77, 77, 77, 0.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+#frameset-mid {
+  margin-top: 60px;
+}	</style>';
+
+	if ($class === 'init') {
 		return;
-	}
-	if(isset($styles[$class])) {
-		echo "<style>$styles[$class]</style>";
-	}
-	//overwrite with custom css
-	echo "<style>$styles[custom]</style>";
-	$allow_js = (bool) get_setting( 'allow_js' );
-	if ( $allow_js ) {
-		echo "<script>$scripts[default]</script>";
-		if(isset($scripts[$class])) {
-			echo "<script>$scripts[$class]</script>";
-		}
 	}
 }
 
@@ -520,26 +1933,19 @@ function credit() : string {
 	return '<small><br><br><a target="_blank" href="https://github.com/0srD4n/DanChat" rel="noreferrer noopener">- DanChat - ' . VERSION . '</a></small>';
 
 }
-
 function meta_html() : string {
 	global $U, $db;
-	$colbg = '000000';
+	$colbg = '';
 	$description = '';
-	$out = '<link rel="icon" type="image/x-icon" href="./icon.svg">'; // Tambahkan favicon
-	if (!empty($U['bgcolour'])) {
+	if(!empty($U['bgcolour'])){
 		$colbg = $U['bgcolour'];
-	} else {
-		if ($db instanceof PDO) {
+	}else{
+		if($db instanceof PDO){
 			$colbg = get_setting('colbg');
-			$description = '<meta name="description" content="' . htmlspecialchars(get_setting('metadescription')) . '">';
+			$description = '<meta name="description" content="'.htmlspecialchars(get_setting('metadescription')).'">';
 		}
 	}
-	return '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' .
-	       '<meta name="referrer" content="no-referrer">' .
-	       '<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">' .
-	       '<meta name="theme-color" content="#' . $colbg . '">' .
-	       '<meta name="msapplication-TileColor" content="#' . $colbg . '">' . 
-	       $description . $out;
+	return '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes"><meta name="theme-color" content="#'.$colbg.'"><meta name="msapplication-TileColor" content="#'.$colbg.'">' . $description;
 }
 
 function form(string $action, string $do='') : string {
@@ -584,13 +1990,11 @@ function print_start(string $class='', int $ref=0, string $url=''): void
 	global $language, $dir;
 	prepare_stylesheets($class);
 	send_headers();
-
 	if(!empty($url)){
 		$url=str_replace('&amp;', '&', $url);// Don't escape "&" in URLs here, it breaks some (older) browsers and js refresh!
 		header("Refresh: $ref; URL=$url");
 	}
 	echo '<!DOCTYPE html><html lang="'.$language.'" dir="'.$dir.'"><head>'.meta_html();
-	echo '<link rel="icon" href="./icon.svg" type="image/svg+xml">';
 	if(!empty($url)){
 		echo "<meta http-equiv=\"Refresh\" content=\"$ref; URL=$url\">";
 	}
@@ -599,12 +2003,9 @@ function print_start(string $class='', int $ref=0, string $url=''): void
 	}else{
 		echo '<title>'.get_setting('chatname').'</title>';
 	}
-    print_stylesheet($class);
+	print_stylesheet($class);
 	echo "</head><body class=\"$class\">";
-	if($class!=='init' && ($externalcss=get_setting('externalcss'))!=''){
-		//external css - in body to make it non-renderblocking
-		echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">";
-	}
+
 }
 
 function send_redirect(string $url): void
@@ -630,6 +2031,7 @@ function send_redirect(string $url): void
 	}
 	print_end();
 }
+
 
 function send_access_denied(): void
 {
@@ -1235,6 +2637,7 @@ function send_sa_password_reset(): void
 	print_end();
 }
 
+
 function send_admin(string $arg): void
 {
 	global $U, $db;
@@ -1291,6 +2694,10 @@ function send_admin(string $arg): void
 		echo form('admin', $view);
 		echo submit(_('View')).'</form></div></td></tr>';
 	}
+	thr();
+	echo '<tr><td><div class="admin-section"><h2>' . _('Link Panel') . '</h2>';
+	echo form_target('_blank', 'viewlinks');
+	echo submit(_('Open Link Panel'), 'class="admin-button"') . '</form></div></td></tr>';
 	thr();
 	echo '<tr><td><div class="admin-section"><h2>'._('Topic').'</h2>';
 	echo form('admin', 'topic');
@@ -1466,7 +2873,6 @@ function send_admin(string $arg): void
 	echo '</div>';
 	print_end();
 }
-
 function send_sessions(): void
 {
 	global $U, $db;
@@ -1785,13 +3191,13 @@ function send_frameset(): void
 	
 	// Add navbar
 	echo "<div id=\"navbar\">";
-	echo '<span>'._("comming soon navbar").'</span>';
-	// echo "<a href=\"$_SERVER[SCRIPT_NAME]?action=view&session=$U[session]&lang=$language\">Home</a>";
-	// echo "<a href=\"$_SERVER[SCRIPT_NAME]?action=profile&session=$U[session]&lang=$language\">Profile</a>";
-	// if($U['status'] >= 5) {
-	// 	echo "<a href=\"$_SERVER[SCRIPT_NAME]?action=admin&session=$U[session]&lang=$language\">Admin</a>";
-	// }
-	// echo "<a href=\"$_SERVER[SCRIPT_NAME]?action=logout&session=$U[session]&lang=$language\">Logout</a>";
+	echo "<a href=\"navbar/link.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">LINK</a>";
+	echo "<a href=\"navbar/ctf.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">CTF</a>"; 
+	echo "<a href=\"navbar/command.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">COMMAND</a>";
+	echo "<a href=\"navbar/changelog.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">CHANGELOG</a>";
+	if ($U['status'] >= 5) {
+		echo "<a href=\"navbar/votes.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">VOTES</a>";
+	}
 	echo "</div>";
 
 	if(isset($_POST['sort'])){
@@ -1832,6 +3238,7 @@ function send_frameset(): void
 	// Build common URL parameters
 	$base_url = "$_SERVER[SCRIPT_NAME]?session=$U[session]&lang=$language";
 	
+	
 	echo "<div id=\"frameset-mid\">";
 	echo "<iframe name=\"view\" src=\"$base_url&action=$action_mid$bottom\">";
 	echo noframe_html(); 
@@ -1855,6 +3262,7 @@ function noframe_html() : string {
 	return _('This chat uses <b>frames</b>. Please enable frames in your browser or use a suitable one!').form_target('_parent', '').submit(_('Back to the login page.'), 'class="backbutton"').'</form>';
 }
 
+
 function send_messages(): void
 {
 	global $U, $language;
@@ -1869,17 +3277,11 @@ function send_messages(): void
 	);
 	
 	echo '<a id="top"></a>';
-	echo '<a id="bottom_link" href="#bottom" style="color: #0ff; text-decoration: none; font-family: monospace;">' . _('Bottom') . '</a>';
+	echo '<a id="bottom_link" style="text-decoration:none" href="#bottom">' . _('Bottom') . '</a>';
 	echo '<div id="manualrefresh"><br>' . _('Manual refresh required') . '<br>';
 	echo form('view') . submit(_('Reload')) . '</form><br></div>';
 	
 	if (!$U['sortupdown']) {
-		echo '<div id="topic">';
-		echo '<span>' . sprintf(_('Hallo %s, welcome back! To DanChat Room see'), htmlspecialchars($U['nickname'])) . '</span>';
-		echo '<span id="rules-style">' . _('!rules') . '</span>';
-		echo ' and ';
-		echo '<span id="about-style">' . _('!about') . '</span>';
-		echo '</div>';
 		
 		print_chatters();
 		print_notifications();
@@ -1889,12 +3291,9 @@ function send_messages(): void
 		print_notifications();
 		print_chatters();
 
-		echo '<div id="topic">';
-		echo get_setting('topic');
-		echo '</div>';
 	}
 
-	echo '<a id="bottom"></a><a id="top_link" href="#top" style="color: #0ff; text-decoration: none; font-family: monospace;">' . _('Top') . '</a>';
+	echo '<a id="top_link">' . _('Top') . '</a>';
 	print_end();
 }
 
@@ -2648,15 +4047,18 @@ function send_colours(): void
 }
 function send_login(): void
 {
-	$ga=(int) get_setting('guestaccess');
-	if($ga===4){
-		send_chat_disabled();
-	}
-	print_start('login');
-	$englobal=(int) get_setting('englobalpass');
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-{random_nonce}'; style-src 'self' 'unsafe-inline';");
+
+	 $ga=(int) get_setting('guestaccess');
+    if($ga===4){
+        send_chat_disabled();
+    }
+    print_start('login');
+
 	echo '<div id="judul-title">';
 	echo '<h1 id="chatname" class="cyber-glitch-title" data-text="'.get_setting('chatname').'">'.get_setting('chatname').'</h1>';
 	echo '</div>';
+    
 	echo form_target('_parent', 'login');
 	if($englobal===1 && isset($_POST['globalpass'])){
 		echo hidden('globalpass', htmlspecialchars($_POST['globalpass']));
@@ -2739,18 +4141,24 @@ function send_fatal_error(string $err): void
 function print_notifications(): void
 {
 	global $U, $db;
-	$temp = $U['status'] >= 2 && $U['eninbox'] != 0 ? $db->query('SELECT COUNT(*) FROM ' . PREFIX . 'inbox WHERE recipient=?;', [$U['nickname']])->fetch(PDO::FETCH_NUM) : null;
+	echo '<span id="notifications">';
+	$stmt=$db->prepare('SELECT loginfails FROM ' . PREFIX . 'members WHERE nickname=?;');
+	$stmt->execute([$U['nickname']]);
+	$temp=$stmt->fetch(PDO::FETCH_NUM);
 	if($temp && $temp[0]>0){
-		echo '<p align="middle">' . $temp[0] . "&nbsp;" . _('Failed login attempt(s) %s') . "</p>";
+		echo '<p align="middle">' . $temp[0] . "&nbsp;" . _('Failed login attempt(s)') . "</p>";
 	}
-	if($temp && $U['status']>=2 && $U['eninbox']!=0){
-		$tmp = $db->query('SELECT COUNT(*) FROM ' . PREFIX . 'inbox WHERE recipient=?;', [$U['nickname']])->fetch(PDO::FETCH_NUM);
+	if($U['status']>=2 && $U['eninbox']!=0){
+		$stmt=$db->prepare('SELECT COUNT(*) FROM ' . PREFIX . 'inbox WHERE recipient=?;');
+		$stmt->execute([$U['nickname']]);
+		$tmp=$stmt->fetch(PDO::FETCH_NUM);
 		if($tmp[0]>0){
 			echo '<p>'.form('inbox').submit(sprintf(_('Read %d messages in your inbox'), $tmp[0])).'</form></p>';
 		}
 	}
 	if($U['status']>=5 && get_setting('guestaccess')==3){
-		$temp = $db->query('SELECT COUNT(*) FROM ' . PREFIX . 'sessions WHERE entry=0 AND status=1;')->fetch(PDO::FETCH_NUM);
+		$result=$db->query('SELECT COUNT(*) FROM ' . PREFIX . 'sessions WHERE entry=0 AND status=1;');
+		$temp=$result->fetch(PDO::FETCH_NUM);
 		if($temp[0]>0){
 			echo '<p>';
 			echo form('admin', 'approve');
@@ -2937,16 +4345,22 @@ function set_secure_cookie(string $name, string $value): void
 function write_new_session(string $password): void
 {
 	global $U, $db, $session;
+
 	$stmt=$db->prepare('SELECT * FROM ' . PREFIX . 'sessions WHERE nickname=?;');
 	$stmt->execute([$U['nickname']]);
 	if($temp=$stmt->fetch(PDO::FETCH_ASSOC)){
 		// check whether alrady logged in
+		   // Tambahkan rate limiting
+    if(!check_rate_limit()) {
+        send_error(_('Too many login attempts. Please try again later. hahah dont brutce force my website !'));
+    }
+    
 		if(password_verify($password, $temp['passhash'])){
 			$U=$temp;
 			check_kicked();
 			set_secure_cookie(COOKIENAME, $U['session']);
 		}else{
-			send_error(_('A user with this nickname is already logged in.')."<br>"._('Wrong Password!'));
+			send_error(_('A user with this nickname is already logged in. Dont to be imposter')."<br>"._('Wrong Password!'));
 		}
 	}else{
 		// create new session
@@ -2977,6 +4391,37 @@ function write_new_session(string $password): void
 			add_system_message(sprintf(get_setting('msgenter'), style_this(htmlspecialchars($U['nickname']), $U['style'])), '');
 		}
 	}
+}
+function check_rate_limit(): bool {
+    global $db;
+    
+    // Create login_attempts table if it doesn't exist
+    $db->query('CREATE TABLE IF NOT EXISTS ' . PREFIX . 'login_attempts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ip VARCHAR(45) NOT NULL,
+        timestamp INT NOT NULL,
+        INDEX (ip, timestamp)
+    )');
+    
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $time = time() - 300; // 5 menit window
+    
+    // Delete old attempts
+    $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'login_attempts WHERE timestamp <= ?');
+    $stmt->execute([$time]);
+    
+    $stmt = $db->prepare('SELECT COUNT(*) FROM ' . PREFIX . 'login_attempts WHERE ip = ? AND timestamp > ?');
+    $stmt->execute([$ip, $time]);
+    $attempts = $stmt->fetchColumn();
+    
+    if($attempts > 5) {
+        return false;
+    }
+    
+    $stmt = $db->prepare('INSERT INTO ' . PREFIX . 'login_attempts (ip, timestamp) VALUES (?, ?)');
+    $stmt->execute([$ip, time()]);
+    
+    return true;
 }
 
 function show_fails(): void
@@ -3059,6 +4504,7 @@ function check_login(): void
 			}
 		}
 	}
+	// status imi untuk members saja yang guest hilang
 	if($U['status']==1){
 		if(in_array($ga, [2, 3], true)){
 			send_waiting_room();
@@ -3923,6 +5369,7 @@ function clean_inbox_selected(): void
 	}
 }
 
+
 function del_all_messages(string $nick, int $entry): void
 {
 	global $db, $U;
@@ -3966,110 +5413,66 @@ function del_last_message(): void
 }
 function print_messages(int $delstatus=0): void
 {
-	global $U, $db;
-
-	$dateformat = get_setting('dateformat');
-	$removeEmbed = !$U['embed'] && get_setting('imgembed');
-	$timestamps = $U['timestamps'] && !empty($dateformat);
-	$direction = $U['sortupdown'] ? 'ASC' : 'DESC';
-	$entry = $U['status'] > 1 ? 0 : $U['entry'];
-
-	echo '<div id="messages">';
-	if ($delstatus > 0) {
-		$stmt = $db->prepare('SELECT postdate, id, text, poster FROM ' . PREFIX . 'messages WHERE ' .
-		"(poststatus<? AND delstatus<?) OR ((poster=? OR recipient=?) AND postdate>=?) ORDER BY id $direction;");
-		$stmt->execute([$U['status'], $delstatus, $U['nickname'], $U['nickname'], $entry]);
-		while ($message = $stmt->fetch(PDO::FETCH_ASSOC)) {
-			prepare_message_print($message, $removeEmbed);
-
-			echo "<div class=\"msg\" id=\"message-$message[id]\"><label><input type=\"checkbox\" name=\"mid[]\" value=\"$message[id]\">";
-
-			if (strpos($message['text'], '@' . $U['nickname']) !== false && (time() - $message['postdate']) <= 10) {
-				echo '<audio autoplay>
-					<source src="music.mp3" type="audio/mpeg">
-				</audio>';
-			}
-
-			if ($timestamps) {
-				if ($message['poststatus'] != 4) { // System messages have poststatus = 4
-					if ($message['poster'] === $U['nickname'] && (time() - $message['postdate']) <= 600) {
-						echo form('delete', '_parent') . hidden('what', 'hilite') . hidden('message_id', $message['id']) . submit('❌', 'style="color: red; float: right; border: none; background: none; cursor: pointer; padding: 0; font-size: 1em; font-weight: bold; text-shadow: 1px 1px 2px #000;"') . '</form>';
-					} elseif ($U['status'] >= 5) {
-						echo form('delete', '_parent') . hidden('what', 'hilite') . hidden('message_id', $message['id']) . submit('❌', 'style="color: red; float: right; border: none; background: none; cursor: pointer; padding: 0; font-size: 1em; font-weight: bold; text-shadow: 1px 1px 2px #000;"') . '</form>';
-					}
-				}
-				echo '<small>' . date($dateformat, $message['postdate']) . ' - </small>';
-			}
-			echo " $message[text]</label></div>";
-		}
-	} else {
-		$stmt = $db->prepare('SELECT id, postdate, poststatus, text, poster FROM ' . PREFIX . 'messages WHERE (poststatus<=? OR poststatus=4 OR ' .
-		'(poststatus=9 AND ( (poster=? AND recipient NOT IN (SELECT ign FROM ' . PREFIX . 'ignored WHERE ignby=?) ) OR recipient=?) AND postdate>=?)' .
-		') AND poster NOT IN (SELECT ign FROM ' . PREFIX . "ignored WHERE ignby=?) ORDER BY id $direction;");
-		$stmt->execute([$U['status'], $U['nickname'], $U['nickname'], $U['nickname'], $entry, $U['nickname']]);
-		while ($message = $stmt->fetch(PDO::FETCH_ASSOC)) {
-			prepare_message_print($message, $removeEmbed);
-			echo "<div class=\"msg\" id=\"message-$message[id]\">";
-
-			if (strpos($message['text'], '@' . $U['nickname']) !== false && (time() - $message['postdate']) <= 10) {
-				echo '<audio autoplay>
-					<source src="music.mp3" type="audio/mpeg">
-				</audio>';
-			}
-
-			if ($timestamps) {
-				if ($message['poststatus'] != 4) { // System messages have poststatus = 4
-					if ($message['poster'] === $U['nickname'] && (time() - $message['postdate']) <= 600) {
-						echo form('delete', '_self') . hidden('what', 'hilite') . hidden('message_id', $message['id']) . submit('❌', 'style="color: red; float: right; border: none; background: none; cursor: pointer; padding: 0; font-size: 1em; font-weight: bold; text-shadow: 1px 1px 2px #000;"') . '</form>';
-					} elseif ($U['status'] >= 5) {
-						echo form('delete', '_self') . hidden('what', 'hilite') . hidden('message_id', $message['id']) . submit('❌', 'style="color: red; float: right; border: none; background: none; cursor: pointer; padding: 0; font-size: 1em; font-weight: bold; text-shadow: 1px 1px 2px #000;"') . '</form>';
-					}
-				}
-				echo '<small>' . date($dateformat, $message['postdate']) . ' - </small>';
-			}
-			echo " $message[text]</label></div>";
-		}
-	}
-	echo '</div>';
-}
-
-function delete_message(int $message_id): void {
     global $U, $db;
-    
-    // Check if the user has access to delete the message
-    $stmt = $db->prepare('SELECT id, poster, postdate FROM ' . PREFIX . 'messages WHERE id = ?');
-    $stmt->execute([$message_id]);
-    $message = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Only can delete own message within 10 minutes or if admin status
-    if ($message) {
-        $canDelete = false;
-        
-        if ($U['status'] >= 5) {
-            // Admin can delete all messages
-            $canDelete = true;
-        } else if ($message['poster'] === $U['nickname']) {
-            // Sender can delete their message within 10 minutes
-            $timeDiff = time() - $message['postdate']; 
-            if ($timeDiff <= 600) { // 600 seconds = 10 minutes
-                $canDelete = true;
+
+    $dateformat = get_setting('dateformat');
+    $removeEmbed = !$U['embed'] && get_setting('imgembed');
+    $timestamps = $U['timestamps'] && !empty($dateformat);
+    $direction = $U['sortupdown'] ? 'ASC' : 'DESC';
+    $entry = $U['status'] > 1 ? 0 : $U['entry'];
+
+    echo '<div id="messages">';
+    if ($delstatus > 0) {
+        $stmt = $db->prepare('SELECT postdate, id, text, poster FROM ' . PREFIX . 'messages WHERE ' .
+        "(poststatus<? AND delstatus<?) OR ((poster=? OR recipient=?) AND postdate>=?) ORDER BY id $direction;");
+        $stmt->execute([$U['status'], $delstatus, $U['nickname'], $U['nickname'], $entry]);
+        while ($message = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            prepare_message_print($message, $removeEmbed);
+            echo "<div class=\"msg\" id=\"message-$message[id]\"><label><input type=\"checkbox\" name=\"mid[]\" value=\"$message[id]\">";
+
+            if (strpos($message['text'], '@' . $U['nickname']) !== false && (time() - $message['postdate']) <= 10) {
+                echo '<audio autoplay><source src="music.mp3" type="audio/mpeg"></audio>';
             }
+
+            if ($timestamps) {
+				if ($message['poststatus'] != 4) {
+					if ($message['poster'] === $U['nickname'] && (time() - $message['postdate']) <= 600) {
+						echo form('delete','postbox') . hidden('what', 'hilite') . hidden('message_id', $message['id']) . submit('❌', 'style="color: red; float: right; border: none; background: none; cursor: pointer; padding: 0; font-size: 1em; font-weight: bold; text-shadow: 1px 1px 2px #000;"') . '</form>';
+					} elseif ($U['status'] >= 5) {
+						echo form('delete','postbox') . hidden('what', 'hilite') . hidden('message_id', $message['id']) . submit('❌', 'style="color: red; float: right; border: none; background: none; cursor: pointer; padding: 0; font-size: 1em; font-weight: bold; text-shadow: 1px 1px 2px #000;"') . '</form>';
+					}
+                }
+                echo '<small>' . date($dateformat, $message['postdate']) . ' - </small>';
+            }
+            echo " $message[text]</label></div>";
         }
-        
-        if ($canDelete) {
-            // Delete message from database
-            $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'messages WHERE id = ?');
-            $stmt->execute([$message_id]);
-            
-            // Delete from inbox if exists
-            $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'inbox WHERE postid = ?');
-            $stmt->execute([$message_id]);
-            
-            // Log deletion activity
-            $stmt = $db->prepare('INSERT INTO ' . PREFIX . 'logs (type, user, message_id, timestamp) VALUES (?, ?, ?, ?)');
-            $stmt->execute(['delete_message', $U['nickname'], $message_id, time()]);
+    } else {
+        $stmt = $db->prepare('SELECT id, postdate, poststatus, text, poster FROM ' . PREFIX . 'messages WHERE (poststatus<=? OR poststatus=4 OR ' .
+        '(poststatus=9 AND ( (poster=? AND recipient NOT IN (SELECT ign FROM ' . PREFIX . 'ignored WHERE ignby=?) ) OR recipient=?) AND postdate>=?)' .
+        ') AND poster NOT IN (SELECT ign FROM ' . PREFIX . "ignored WHERE ignby=?) ORDER BY id $direction;");
+        $stmt->execute([$U['status'], $U['nickname'], $U['nickname'], $U['nickname'], $entry, $U['nickname']]);
+        while ($message = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            prepare_message_print($message, $removeEmbed);
+            echo "<div class=\"msg\" id=\"message-$message[id]\">";
+
+            if (strpos($message['text'], '@' . $U['nickname']) !== false && (time() - $message['postdate']) <= 10) {
+                echo '<audio autoplay><source src="music.mp3" type="audio/mpeg"></audio>';
+            }
+
+            if ($timestamps) {
+				if ($message['poststatus'] != 4) {
+					if ($message['poster'] === $U['nickname'] && (time() - $message['postdate']) <= 600) {
+						echo form('delete','post') . hidden('what', 'hilite') . hidden('message_id', $message['id']) . submit('❌', 'style="color: red; float: right; border: none; background: none; cursor: pointer; padding: 0; font-size: 1em; font-weight: bold; text-shadow: 1px 1px 2px #000;"') . '</form>';
+					} elseif ($U['status'] >= 5) {
+						echo form('delete','post') . hidden('what', 'hilite') . hidden('message_id', $message['id']) . submit('❌', 'style="color: red; float: right; border: none; background: none; cursor: pointer; padding: 0; font-size: 1em; font-weight: bold; text-shadow: 1px 1px 2px #000;"') . '</form>';
+					}
+                }
+                echo '<small>' . date($dateformat, $message['postdate']) . ' - </small>';
+            }
+            echo " $message[text]</label></div>";
         }
     }
+    echo '</div>';
 }
 
 function prepare_message_print(array &$message, bool $removeEmbed): void
@@ -4091,7 +5494,6 @@ function prepare_message_print(array &$message, bool $removeEmbed): void
 }
 
 // this and that
-
 function send_headers(): void
 {
 	global $U, $scripts, $styles;
@@ -4417,6 +5819,7 @@ function destroy_chat(array $C): void
 	$db->exec('DROP TABLE ' . PREFIX . 'captcha;');
 	$db->exec('DROP TABLE ' . PREFIX . 'files;');
 	$db->exec('DROP TABLE ' . PREFIX . 'filter;');
+	$db->exec('DROP TABLE ' . PREFIX . 'cyber_links;'); // Add this line
 	$db->exec('DROP TABLE ' . PREFIX . 'ignored;');
 	$db->exec('DROP TABLE ' . PREFIX . 'inbox;');
 	$db->exec('DROP TABLE ' . PREFIX . 'linkfilter;');
@@ -4503,7 +5906,7 @@ function init_chat(): void
 		$db->exec('CREATE INDEX ' . PREFIX . 'incognito ON ' . PREFIX . 'sessions(incognito);');
 		$db->exec('CREATE TABLE ' . PREFIX . "settings (setting varchar(50) NOT NULL PRIMARY KEY, value text NOT NULL)$diskengine$charset;");
 		$db->exec('CREATE TABLE ' . PREFIX . "bad_words (id INT AUTO_INCREMENT PRIMARY KEY, word VARCHAR(255) NOT NULL UNIQUE)$diskengine$charset;");
-
+		$db->exec('CREATE TABLE ' . PREFIX . "cyber_links (id $primary, title VARCHAR(255) NOT NULL, url VARCHAR(255) NOT NULL, description TEXT, section VARCHAR(50) DEFAULT 'General', status TINYINT(1) DEFAULT 1)$diskengine$charset;");
 		$settings=[
 			['guestaccess', '0'],
 			['globalpass', ''],
@@ -5186,16 +6589,22 @@ function load_config(): void
 	define('ENCRYPTKEY_PASS', '5PcpFOZ+SfuAIU/32XqK/26ZXKsI198qC7DR1HTdjVY='); // Recommended length: 32. Encryption key for messages
 	define('AES_IV_PASS', 'ba94e56f3888507402d5e08484e92cd1'); // Recommended length: 12. AES Encryption IV
 	
-	define('DBHOST', 'localhost'); // Database host
-	define('DBUSER', '8XEdt92Z4NAIIu9CNXCxR58Xet0Ev3C0'); // Database user
-	define('DBPASS', '180406'); // Database password
-	define('DBNAME', '7dt78qxuzbTTlqSOLYdfbJOMLqh1bJBs'); // Database
-
 	// define('DBHOST', 'localhost'); // Database host
-	// define('DBUSER', 'root'); // Database user
+	// define('DBUSER', '8XEdt92Z4NAIIu9CNXCxR58Xet0Ev3C0'); // Database user
 	// define('DBPASS', '180406'); // Database password
-	// define('DBNAME', 'le_chat_php'); // Database
+	// define('DBNAME', '7dt78qxuzbTTlqSOLYdfbJOMLqh1bJBs'); // Database
+	// Load database configuration from external file
+
+	if (!file_exists('confix.php')) {
+		die('Error: confix.php file not found');
+	}
+	require_once ('confix.php');
 	
+	define('DBHOST', $DBHOST); // Database host
+	define('DBUSER', $DBUSER); // Database user 
+	define('DBPASS', $DBPASS); // Database password
+	define('DBNAME', $DBNAME); // Database name
+
 	define('PERSISTENT', true); // Use persistent database conection true/false
 	define('PREFIX', ''); // Prefix - Set this to a unique value for every chat, if you have more than 1 chats on the same database or domain - use only alpha-numeric values (A-Z, a-z, 0-9, or _) other symbols might break the queries
 	define('MEMCACHED', false); // Enable/disable memcached caching true/false - needs memcached extension and a memcached server.
