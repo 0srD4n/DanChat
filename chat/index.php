@@ -45,7 +45,7 @@ $language = LANG;// user selected language
 $locale = LANGUAGES[LANG]['locale'];// user selected locale
 $dir = LANGUAGES[LANG]['dir'];// user selected language direction
 $scripts = []; //js enhancements
-$styles = ['./style.css']; //css styles - prioritaskan external styles
+$styles = []; //css styles - prioritaskan external styles
 $session = $_REQUEST['session'] ?? ''; //requested session
 // set session variable to cookie if cookies are enabled
 if(!isset($_REQUEST['session']) && isset($_COOKIE[COOKIENAME])){
@@ -69,7 +69,10 @@ function route(): void {
     } elseif ($_REQUEST['action'] === 'wait') {
         parse_sessions();
         send_waiting_room();
-    } elseif ($_REQUEST['action'] === 'post') {
+    }elseif($_POST['action']==='view_vote'){
+		send_votes();
+	} 
+	elseif ($_REQUEST['action'] === 'post') {
         check_session();
         if (isset($_POST['kick']) && isset($_POST['sendto']) && $_POST['sendto'] !== 's *') {
             if ($U['status'] >= 5 || ($U['status'] >= 3 && (get_setting('memkickalways') || (get_count_mods() == 0 && get_setting('memkick'))))) {
@@ -498,7 +501,7 @@ function edit_link(int $id, array $data): string {
 }
 function show_manageLink(): void {
 	global $U, $db;
-
+send_headers();
 	// Check if table exists, create if not
 	$tableExists = $db->query("SHOW TABLES LIKE '" . PREFIX . "cyber_links'")->rowCount() > 0;
 	
@@ -519,7 +522,6 @@ function show_manageLink(): void {
 	$links = $db->query('SELECT * FROM ' . PREFIX . 'cyber_links ORDER BY created_at DESC')->fetchAll();
 	
 	// Send proper headers
-	header('Content-Type: text/html; charset=UTF-8');
 	?>
 	<!DOCTYPE html>
 	<html lang="en" dir="ltr">
@@ -908,14 +910,44 @@ function print_stylesheet(string $class): void
 	}
 	// Fallback inline CSS if external blocked
 	echo '<style>
-	.msg {padding: 0.5em 0; border-bottom: 1px solid #363636;}
-input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; border-radius: 0.5em;}
+	body .logout {
+	background:black;
+	}
+	
+	.frame-wrapper {
+    position: relative;
+    width: 100%;
+	background:black;
+    height: 100%;
+    z-index: 1;
+}
+	body .frame-mid {
+		background:transparent;
+		  color: #FFFFFF;
+    font-family: "monospace", system-ui;
+    font-size: 14px;
+	align-items: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-shadow: none;
+	}
+
+
+
+	.msg { border-bottom: 1px solid #363636;}
+input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; border-radius: 0.5em; background-color:black;}
 #messages small {color: #989898;}
 #messages {display: block; width: 80%;}
 .messages #topic {display: block; width: 80%;}
 .messages #chatters {
   display: block;
   float: right;
+    background: rgba(0, 20, 20, 0.8);
   width: 15%;
   overflow-y: auto;
   position: fixed;
@@ -924,9 +956,7 @@ input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; bord
   top: 2em;
   text-decoration: none;
   bottom: 2em;
-  background: rgba(0, 20, 20, 0.8);
   border-left: 1px solid #00ff00;
-  box-shadow: -2px 0 10px rgba(0, 255, 0, 0.096);
   scrollbar-width: thin;
   scrollbar-color: #00ff00 #000;
   padding: 10px; 
@@ -959,17 +989,25 @@ input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; bord
 .msg {
   max-height: 180px;
   overflow-y: auto;
-  background-color: rgba(100,100,100,0.4);
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
+  background: rgba(0, 20, 20, 0.9);
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+}
+
+.msg:hover {
+  background: rgba(0, 30, 30, 0.95);
+  border-color: rgba(0, 255, 0, 0.4);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+  transform: translateY(-2px);
 }
 
 .messages #chatters table a {
   display: table-row;
   text-decoration: none;
   color: #ffffff;
-  transition: all 0.2s ease;
   font-family: "Fira Code", monospace;
 }
 .messages #chatters .afk-badge {
@@ -983,11 +1021,12 @@ input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; bord
   display: inline-flex;
   align-items: center;
 }
-body, iframe {
-    background-color: #000000;
+body {
+    background-color: black;
     color: #FFFFFF;
     font-family: "monospace", system-ui;
     font-size: 14px;
+	align-items: center;
     text-align: center;
     width: 100%;
     height: 100%;
@@ -997,6 +1036,7 @@ body, iframe {
     outline: none;
     box-shadow: none;
 }
+
 .post {
     margin-top: 10px;
 }
@@ -1076,12 +1116,19 @@ input[type=text], input[type=password], input[type=submit], select, textarea {
     padding: 5px;
 }
 .sessions td td { padding: 1px; }
-.notes textarea { height: 80vh; width: 80%; }
+.notes textarea { 
+    height: 80vh; 
+    width: 80%; 
+    color: white; 
+}
+
 .post table, .controls table, .login table {
     border-spacing: 0px;
     margin-left: auto;
     margin-right: auto;
 }
+
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1607,39 +1654,66 @@ td#color_label {
 .warnss{
 color:red;
 }
-#frameset-mid {
-  position: fixed;
-  top: 120px;
-  bottom: 45px;
-  left: 0;
-  right: 0;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+#frame-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: saturate(0.3) brightness(0.7);
+    background-image: url("init.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
 }
 
-#frameset-top {
-  position: fixed;
-  top: 50px;
-  left: 0;
-  right: 0;
-  height: 120px;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  border-bottom: 1px solid;
+#frameset-mid iframe {
+    position: fixed;
+    top: 25.5%;
+    left: 0;
+    width: 100%;
+    height: calc(90% - 45px);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    border: none;
+    z-index: 1;
+}
+	.messages {
+background: transparent;
+	}
+
+#frameset-top iframe {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 18%;
+    margin: 0;
+	margin-top: 3rem;
+    padding: 0;
+    overflow: hidden;
+    border: none;
+    border-bottom: 1px solid #00ff00;
+    background: rgba(0,0,0,0.8);
+    z-index: 2;
 }
 
-#frameset-bot {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 45px;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  border-top: 1px solid;
+#frameset-bot iframe {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 45px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: none;
+    border-top: 1px solid #00ff00;
+    background: rgba(0,0,0,0.8);
+    z-index: 2;
 }
 
 .filter table table {
@@ -1713,14 +1787,6 @@ color:red;
   100% { top: 0%; }
 }
 
-.msg {
-  max-height: 180px;
-  overflow-y: auto;
-  background-color: rgba(100,100,100,0.4);
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
 
 #bottom_link {
   position: fixed;
@@ -1747,9 +1813,10 @@ a:hover img {
   width: 35%;
 }
 
-#messages {
+div #messages {
   word-wrap: break-word;
   padding: 10px;
+  background:rgba(0,0,0,0.5);
 }
 body.admin .admin-panel {
   background: #000000;
@@ -1879,10 +1946,7 @@ body.admin .btn:hover {
 
 
 #navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   height: 50px;
   background: rgba(0, 0, 0, 0.95);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -1914,9 +1978,7 @@ body.admin .btn:hover {
   transform: translateY(-1px);
 }
 
-#frameset-mid {
-  margin-top: 60px;
-}	</style>';
+</style>';
 
 	if ($class === 'init') {
 		return;
@@ -1990,6 +2052,9 @@ function print_start(string $class='', int $ref=0, string $url=''): void
 	global $language, $dir;
 	prepare_stylesheets($class);
 	send_headers();
+	if($enableMetaRefresh && $refresh > 0) {
+        echo "<meta http-equiv=\"refresh\" content=\"$refresh;url=$url\">";
+    }
 	if(!empty($url)){
 		$url=str_replace('&amp;', '&', $url);// Don't escape "&" in URLs here, it breaks some (older) browsers and js refresh!
 		header("Refresh: $ref; URL=$url");
@@ -2568,6 +2633,173 @@ function send_delete_account(): void
 	echo form('profile', 'delete').hidden('confirm', 'yes').submit(_('Yes'), 'class="delbutton"').'</form></td><td>';
 	echo form('profile').submit(_('No'), 'class="backbutton"').'</form></td><tr></table>';
 	print_end();
+}
+function send_votes(): void {
+    // Check session and get user data
+    check_session();
+    global $U, $db;
+
+    // Only allow access for users with status >= 3
+    if (!isset($U['status']) || $U['status'] < 3) {
+        send_access_denied();
+        return;
+    }
+
+    // Handle form submissions
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['action'])) {
+            switch ($_POST['action']) {
+                case 'create':
+                    if (isset($_POST['title'], $_POST['description'], $_POST['min_status'])) {
+                        $stmt = $db->prepare('INSERT INTO ' . PREFIX . 'votes (title, description, created_by, min_status, created_at) VALUES (?, ?, ?, ?, NOW())');
+                        $stmt->execute([
+                            $_POST['title'],
+                            $_POST['description'], 
+                            $U['nickname'],
+                            (int)$_POST['min_status']
+                        ]);
+                    }
+                    break;
+
+                case 'vote':
+                    if (isset($_POST['vote_id'], $_POST['choice'])) {
+                        // Check if user already voted
+                        $stmt = $db->prepare('SELECT id FROM ' . PREFIX . 'vote_responses WHERE vote_id = ? AND voter = ?');
+                        $stmt->execute([$_POST['vote_id'], $U['nickname']]);
+                        if (!$stmt->fetch()) {
+                            $stmt = $db->prepare('INSERT INTO ' . PREFIX . 'vote_responses (vote_id, voter, choice, voted_at) VALUES (?, ?, ?, NOW())');
+                            $stmt->execute([
+                                $_POST['vote_id'],
+                                $U['nickname'],
+                                $_POST['choice']
+                            ]);
+                        }
+                    }
+                    break;
+
+                case 'delete':
+                    if (isset($_POST['vote_id']) && $U['status'] >= 5) {
+                        $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'votes WHERE id = ?');
+                        $stmt->execute([$_POST['vote_id']]);
+                        
+                        $stmt = $db->prepare('DELETE FROM ' . PREFIX . 'vote_responses WHERE vote_id = ?');
+                        $stmt->execute([$_POST['vote_id']]);
+                    }
+                    break;
+
+                case 'edit':
+                    if (isset($_POST['vote_id'], $_POST['title'], $_POST['description'], $_POST['min_status']) && $U['status'] >= 5) {
+                        $stmt = $db->prepare('UPDATE ' . PREFIX . 'votes SET title = ?, description = ?, min_status = ? WHERE id = ?');
+                        $stmt->execute([
+                            $_POST['title'],
+                            $_POST['description'],
+                            (int)$_POST['min_status'],
+                            $_POST['vote_id']
+                        ]);
+                    }
+                    break;
+            }
+        }
+    }
+
+    // Get all votes
+    $stmt = $db->prepare('SELECT v.*, 
+        COUNT(DISTINCT CASE WHEN vr.choice = 1 THEN vr.voter END) as yes_votes,
+        COUNT(DISTINCT CASE WHEN vr.choice = 0 THEN vr.voter END) as no_votes,
+        EXISTS(SELECT 1 FROM ' . PREFIX . 'vote_responses WHERE vote_id = v.id AND voter = ?) as has_voted
+        FROM ' . PREFIX . 'votes v
+        LEFT JOIN ' . PREFIX . 'vote_responses vr ON v.id = vr.vote_id
+        WHERE v.active = TRUE
+        GROUP BY v.id
+        ORDER BY v.created_at DESC');
+    $stmt->execute([$U['nickname']]);
+    $votes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get edit vote ID from query string if present
+    $edit_id = isset($_GET['edit']) ? (int)$_GET['edit'] : 0;
+
+    print_start('votes');
+    echo '<h2>'._('Voting System').'</h2>';
+
+    // Create vote form for admins
+    if ($U['status'] >= 5) {
+        echo '<div class="create-vote">';
+        echo '<h3>'._('Create New Vote').'</h3>';
+        echo form('notes', 'votes');
+        echo '<input type="hidden" name="action" value="create">';
+        echo '<p><input type="text" name="title" placeholder="'._('Vote Title').'" required></p>';
+        echo '<p><textarea name="description" placeholder="'._('Vote Description').'" required></textarea></p>';
+        echo '<p><select name="min_status" required>';
+        echo '<option value="1">'._('Guest').'</option>';
+        echo '<option value="2">'._('Super Guest').'</option>'; 
+        echo '<option value="3">'._('Registered').'</option>';
+        echo '<option value="4">'._('Moderator').'</option>';
+        echo '<option value="5">'._('Admin').'</option>';
+        echo '</select></p>';
+        echo '<p>'.submit(_('Create Vote')).'</p>';
+        echo '</form></div>';
+    }
+
+    // Display votes
+    foreach ($votes as $vote) {
+        if ($U['status'] >= $vote['min_status']) {
+            echo '<div class="vote">';
+            
+            if ($edit_id == $vote['id'] && $U['status'] >= 5) {
+                echo form('notes', 'votes');
+                echo '<input type="hidden" name="action" value="edit">';
+                echo '<input type="hidden" name="vote_id" value="'.$vote['id'].'">';
+                echo '<p><input type="text" name="title" value="'.htmlspecialchars($vote['title']).'" required></p>';
+                echo '<p><textarea name="description" required>'.htmlspecialchars($vote['description']).'</textarea></p>';
+                echo '<p><select name="min_status" required>';
+                for ($i = 1; $i <= 5; $i++) {
+                    echo '<option value="'.$i.'"'.($vote['min_status'] == $i ? ' selected' : '').'>'.$i.'</option>';
+                }
+                echo '</select></p>';
+                echo '<p>'.submit(_('Save Changes')).'</p>';
+                echo '</form>';
+            } else {
+                echo '<h3>'.htmlspecialchars($vote['title']).'</h3>';
+                echo '<p>'.nl2br(htmlspecialchars($vote['description'])).'</p>';
+                echo '<p>'._('Yes').': '.$vote['yes_votes'].' '._('No').': '.$vote['no_votes'].'</p>';
+                echo '<p>'._('Created by').': '.htmlspecialchars($vote['created_by']).'</p>';
+                
+                if (!$vote['has_voted']) {
+                    echo form('notes', 'votes');
+                    echo '<input type="hidden" name="action" value="vote">';
+                    echo '<input type="hidden" name="vote_id" value="'.$vote['id'].'">';
+                    echo '<input type="hidden" name="choice" value="1">';
+                    echo submit(_('Vote Yes'));
+                    echo '</form>';
+
+                    echo form('notes', 'votes');
+                    echo '<input type="hidden" name="action" value="vote">';
+                    echo '<input type="hidden" name="vote_id" value="'.$vote['id'].'">';
+                    echo '<input type="hidden" name="choice" value="0">';
+                    echo submit(_('Vote No'));
+                    echo '</form>';
+                } else {
+                    echo '<p>'._('You have already voted').'</p>';
+                }
+
+                if ($U['status'] >= 5) {
+                    echo form('notes', 'votes');
+                    echo '<input type="hidden" name="action" value="delete">';
+                    echo '<input type="hidden" name="vote_id" value="'.$vote['id'].'">';
+                    echo submit(_('Delete'), 'class="delete"');
+                    echo '</form>';
+                    
+                    echo form('notes', 'votes');
+                    echo '<input type="hidden" name="edit" value="'.$vote['id'].'">';
+                    echo submit(_('Edit'));
+                    echo '</form>';
+                }
+            }
+            echo '</div>';
+        }
+    }
+
+    print_end();
 }
 
 function send_init(): void
@@ -3196,7 +3428,7 @@ function send_frameset(): void
 	echo "<a href=\"navbar/command.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">COMMAND</a>";
 	echo "<a href=\"navbar/changelog.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">CHANGELOG</a>";
 	if ($U['status'] >= 5) {
-		echo "<a href=\"navbar/votes.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">VOTES</a>";
+		echo  form('view_vote').submit(_('Votes'));	
 	}
 	echo "</div>";
 
@@ -3238,21 +3470,24 @@ function send_frameset(): void
 	// Build common URL parameters
 	$base_url = "$_SERVER[SCRIPT_NAME]?session=$U[session]&lang=$language";
 	
+	// Add background frame div that appears behind all frames
+	echo '<div id="frame-background" class="cyber-background">';
+	echo '<div class="matrix-effect"></div>';
+	echo '</div>';
+	echo '<div id="frameset-mid">';
+	echo '<iframe   name="view" src="' . $base_url . '&action=' . $action_mid . $bottom . '">';
+	echo noframe_html();
+	echo '</iframe></div>';
 	
-	echo "<div id=\"frameset-mid\">";
-	echo "<iframe name=\"view\" src=\"$base_url&action=$action_mid$bottom\">";
+	echo '<div id="frameset-top">';
+	echo '<iframe name="' . $action_top . '" src="' . $base_url . '&action=' . $action_top . '">';
 	echo noframe_html(); 
-	echo "</iframe></div>";
+	echo '</iframe></div>';
 	
-	echo "<div id=\"frameset-top\">";
-	echo "<iframe name=\"$action_top\" src=\"$base_url&action=$action_top\">";
+	echo '<div id="frameset-bot">';
+	echo '<iframe name="' . $action_bot . '" src="' . $base_url . '&action=' . $action_bot . $sort_bot . '">';
 	echo noframe_html();
-	echo "</iframe></div>";
-	
-	echo "<div id=\"frameset-bot\">";
-	echo "<iframe name=\"$action_bot\" src=\"$base_url&action=$action_bot$sort_bot\">";
-	echo noframe_html();
-	echo "</iframe></div>";
+	echo '</iframe></div>';
 	
 	echo '</body></html>';
 	exit;
@@ -3273,7 +3508,8 @@ function send_messages(): void
 	print_start(
 		'messages', 
 		(int) $U['refresh'], 
-		"{$_SERVER['SCRIPT_NAME']}?action=view&session={$U['session']}&lang=$language$nocache$sort"
+		"{$_SERVER['SCRIPT_NAME']}?action=view&session={$U['session']}&lang=$language$nocache$sort",
+true	
 	);
 	
 	echo '<a id="top"></a>';
@@ -3721,6 +3957,7 @@ function view_publicnotes(): void
 	global $db;
 	$dateformat = get_setting('dateformat');
 	print_start('publicnotes');
+	echo '<div class="public-notes-container" style="background:black;">';
 	echo '<h2>'._('Public notes').'</h2><p>';
 	$query = $db->query('SELECT lastedited, editedby, text FROM ' . PREFIX . 'notes INNER JOIN (SELECT MAX(id) AS latest FROM ' . PREFIX . 'notes WHERE type=3 GROUP BY editedby) AS t ON t.latest = id;');
 	while($result = $query->fetch(PDO::FETCH_OBJ)){
@@ -3739,6 +3976,7 @@ function view_publicnotes(): void
 			echo '<br>';
 		}
 	}
+	echo '</div>';
 	print_end();
 }
 function send_profile(string $arg=''): void
@@ -4047,7 +4285,6 @@ function send_colours(): void
 }
 function send_login(): void
 {
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-{random_nonce}'; style-src 'self' 'unsafe-inline';");
 
 	 $ga=(int) get_setting('guestaccess');
     if($ga===4){
@@ -5502,7 +5739,7 @@ function send_headers(): void
 	header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0, private');
 	header('Expires: 0');
 	header('Referrer-Policy: no-referrer');
-	header("Permissions-Policy: accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(), gamepad=(), speaker-selection=(), conversion-measurement=(), focus-without-user-activation=(), hid=(), idle-detection=(), sync-script=(), vertical-scroll=(), serial=(), trust-token-redemption=(), interest-cohort=(), otp-credentials=()");
+	header("Permissions-Policy: accelerometer=(), autoplay=(), camera=(), cross-origin-isolated=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(), gamepad=(), hid=(), idle-detection=(), serial=(), interest-cohort=(), otp-credentials=()");
 	if(!get_setting('imgembed') || !($U['embed'] ?? false)){
 		header("Cross-Origin-Embedder-Policy: require-corp");
 	}

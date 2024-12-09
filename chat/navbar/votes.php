@@ -1,24 +1,23 @@
 <?php
 require_once '../confix.php';
+
 define('DBHOST', $DBHOST); 
 define('DBUSER', $DBUSER);
 define('DBPASS', $DBPASS);
 define('DBNAME', $DBNAME);
 define('PREFIX', '');
 
-// Create tables if not exist
+// Check session and get user data
+global $U;
+
+// Only allow access for users with status >= 3
+
+
 try {
     $db = new PDO("mysql:host=$DBHOST;dbname=$DBNAME;charset=utf8mb4", $DBUSER, $DBPASS);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
     die("Connection failed: " . $e->getMessage());
-}
-
-check_session();
-
-// Only allow access for users with status >= 3
-if ($U['status'] < 3) {
-    send_access_denied();
 }
 
 // Handle form submissions
