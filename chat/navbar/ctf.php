@@ -1,224 +1,180 @@
-<!-- <?php
-$nickname = filter_input(INPUT_GET, 'nickname', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+<?php
+require_once '../confix.php';
+define('DB_HOST', $DBHOST);
+define('DB_NAME', $DBNAME); 
+define('DB_USER', $DBUSER);
+define('DB_PASS', $DBPASS);
+define('PREFIX', '');
+
+try {
+    // Create PDO connection
+    $db = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME, DB_USER, DB_PASS);
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $nickname = filter_input(INPUT_GET, 'nickname', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+    $session = filter_input(INPUT_GET, 'session', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
+    $is_admin = false;
+
+
+
+    // Get challenges data
+    $stmt = $db->query("SELECT c.id, c.title, c.points, c.solved_by, cat.name as category
+                       FROM challenges c
+                       JOIN categories cat ON c.category_id = cat.id 
+                       ORDER BY cat.name, c.points DESC");
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+
+    // Get leaderboard data
+    $stmt = $db->query("SELECT nickname, solved 
+                       FROM leaderboard 
+                       ORDER BY points DESC");
+    $leaderboard = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+} catch(PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTF Arena</title>
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <title>CTF Platform</title>
     <style>
-        :root {
-            --neon-blue: #00f3ff;
-            --neon-purple: #9d00ff;
-            --dark-bg: #0a0a12;
-        }
-
-        body {
-            background-color: var(--dark-bg);
-            color: #fff;
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(0,243,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 100% 0%, rgba(157,0,255,0.1) 0%, transparent 50%);
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.5;
+            
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            padding: 2rem;
+            align-items: center;
         }
 
-        .header {
+        .challenges-section {
+            margin-bottom: 3rem;
             text-align: center;
-            padding: 30px;
-            margin-bottom: 40px;
-            border: 1px solid rgba(0,243,255,0.3);
-            background: rgba(10,10,18,0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,243,255,0.2);
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin: 0;
-            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 10px rgba(0,243,255,0.5);
-        }
-
-        .user-info {
-            margin-top: 20px;
-            font-size: 1.1em;
-            color: #888;
+        .category-header {
+            color: #00ff88;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #00ff88;
         }
 
         .challenges-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            padding: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            justify-content: center;
         }
 
         .challenge-card {
-            background: rgba(10,10,18,0.9);
-            border: 1px solid rgba(0,243,255,0.2);
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .challenge-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,243,255,0.3);
-            border-color: var(--neon-blue);
-        }
-
-        .challenge-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
 
         .challenge-title {
-            font-size: 1.3em;
-            color: var(--neon-blue);
+            color: #00ff88;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
         }
 
         .challenge-points {
-            background: rgba(157,0,255,0.2);
-            padding: 5px 10px;
-            border-radius: 20px;
-            color: var(--neon-purple);
-            font-weight: bold;
-        }
-
-        .challenge-category {
-            font-size: 0.9em;
             color: #888;
-            margin-bottom: 10px;
+            font-size: 0.9rem;
         }
 
-        .progress-section {
-            margin-top: 40px;
-            padding: 20px;
-            background: rgba(10,10,18,0.8);
-            border-radius: 12px;
-            border: 1px solid rgba(157,0,255,0.2);
+        .leaderboard-section {
+            background: #111;
+            
+            border-radius: 8px;
+            padding: 2rem;
+            margin-top: 3rem;
         }
 
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
-            width: 35%;
-            border-radius: 5px;
-            transition: width 0.5s ease;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
+        .leaderboard-title {
+            color: #00ff88;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
             text-align: center;
         }
 
-        .stat-item {
-            color: #888;
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .stat-value {
-            font-size: 1.5em;
-            color: var(--neon-blue);
-            font-weight: bold;
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .leaderboard-table th {
+            color: #00ff88;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
+    <div class="profile-info">
+        <span class="names"><?php echo $nickname; ?></span>
+        <span class="ctf-finish"><php? </span>
+    </div>
     <div class="container">
-        <div class="header">
-            <h1>CTF ARENA</h1>
-            <div class="user-info">
-                Player: <span style="color: var(--neon-blue)"><?php echo htmlspecialchars($nickname); ?></span> | 
-                Rank: <span style="color: var(--neon-purple)"><?php 
-                    switch($status) {
-                        case 1: echo 'Newbie'; break;
-                        case 2: echo 'Explorer'; break;
-                        case 3: echo 'Hacker'; break;
-                        case 5: echo 'Elite'; break;
-                        case 6: echo 'Master'; break;
-                        case 7: echo 'Guru'; break;
-                        case 8: echo 'Legend'; break;
-                    }
-                ?></span>
-            </div>
+        <div class="challenges-section">
+            <?php foreach($challenges as $category => $category_challenges): ?>
+                <h2 class="category-header"><?php echo htmlspecialchars($category); ?></h2>
+                <div class="challenges-grid">
+                    <?php foreach($category_challenges as $challenge): ?>
+                        <div class="challenge-card">
+                            <div class="challenge-title"><?php echo htmlspecialchars($challenge['title']); ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endforeach; ?>
         </div>
 
-        <div class="challenges-grid">
-            <div class="challenge-card">
-                <div class="challenge-header">
-                    <div class="challenge-title">Binary Exploitation</div>
-                    <div class="challenge-points">500 pts</div>
-                </div>
-                <div class="challenge-category">Buffer Overflow</div>
-                <p>Exploit the vulnerable binary to gain shell access and capture the flag.</p>
-            </div>
-
-            <div class="challenge-card">
-                <div class="challenge-header">
-                    <div class="challenge-title">Web Security</div>
-                    <div class="challenge-points">300 pts</div>
-                </div>
-                <div class="challenge-category">SQL Injection</div>
-                <p>Find and exploit SQL injection vulnerabilities to access admin panel.</p>
-            </div>
-
-            <div class="challenge-card">
-                <div class="challenge-header">
-                    <div class="challenge-title">Cryptography</div>
-                    <div class="challenge-points">400 pts</div>
-                </div>
-                <div class="challenge-category">RSA Challenge</div>
-                <p>Break the encryption and decrypt the secret message.</p>
-            </div>
+        <div class="leaderboard-section">
+            <h2 class="leaderboard-title">Leaderboard</h2>
+            <table class="leaderboard-table">
+                <tr>
+                    <th>Player</th>
+                    <th>Challenges Solved</th>
+                </tr>
+                <?php foreach($leaderboard as $player): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($player['nickname']); ?></td>
+                        <td><?php echo $player['solved']; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
         </div>
 
-        <div class="progress-section">
-            <h2>Your Progress</h2>
-            <div class="progress-bar">
-                <div class="progress-fill"></div>
-            </div>
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-value">12</div>
-                    Challenges Solved
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">2,450</div>
-                    Total Points
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">#8</div>
-                    Global Rank
-                </div>
-            </div>
-        </div>
     </div>
 </body>
-</html> -->
-echo "comming soon hallo world";
+</html>

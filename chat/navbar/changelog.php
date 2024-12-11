@@ -137,6 +137,12 @@ $language = $_GET['lang'] ?? 'en';
             <ul class="changes">
                 <li><span class="tag feature">NEW</span> add control panel link manage status staf</li>
             </ul>
+            <span class="version-number">v2.1.2</span>
+            <span class="date">2024-12-10</span>
+            <ul class="changes">
+                <li><span class="tag security">BUGFIX</span> fixed layout on the mid frame and link page upadate command link</li>
+                <li><span class="tag feature">NEW</span> add command on the text area, add check offline website on the link page. </li>
+            </ul>
         </div>
         </p>
     </div>

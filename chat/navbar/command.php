@@ -1,4 +1,4 @@
-<!-- <?php
+ <?php
 $nickname = filter_input(INPUT_GET, 'nickname', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
 $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
 ?>
@@ -7,7 +7,7 @@ $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? ''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Command Center</title>
+    <title>Command Center</title>
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <style>
         body {
@@ -106,7 +106,7 @@ $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? ''
     <div class="matrix-effect"></div>
     <div class="container">
         <div class="header">
-            <h1>[ CYBER COMMAND CENTER ]</h1>
+            <h1>[ CYBER COMMAND  ]</h1>
             <p class="important">WARNING: AUTHORIZED ACCESS ONLY</p>
             <p class="cyber-text">Logged in as: <span style="color:white"><?php echo htmlspecialchars($nickname); ?></span> | Status: <span style="color:#0f0"><?php 
                 switch($status) {
@@ -138,79 +138,28 @@ $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? ''
         <div class="command-section">
             <h2>SYSTEM COMMANDS</h2>
             <div class="command-item">
-                <div class="command-name">/help</div>
-                <div class="command-syntax">Syntax: /help [command]</div>
-                <div class="command-desc">Display help information for available commands or specific command</div>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/status</div>
-                <div class="command-syntax">Syntax: /status</div>
-                <div class="command-desc">Check system status and current security level</div>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/clear</div>
-                <div class="command-syntax">Syntax: /clear</div>
-                <div class="command-desc">Clear terminal screen and command history</div>
+                <div class="command-name">/code</div>
+                <div class="command-syntax">Syntax: /code [language] [code]</div>
+                <div class="command-desc">Display multi-line code block and colorize it</div>
             </div>
         </div>
-
         <div class="command-section">
             <h2>COMMUNICATION COMMANDS</h2>
             <div class="command-item">
-                <div class="command-name">/msg</div>
-                <div class="command-syntax">Syntax: /msg [user] [message]</div>
-                <div class="command-desc">Send encrypted private message to specified user</div>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/broadcast</div>
-                <div class="command-syntax">Syntax: /broadcast [message]</div>
-                <div class="command-desc">Send message to all connected users (Admin only)</div>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/ping</div>
-                <div class="command-syntax">Syntax: /ping [target]</div>
-                <div class="command-desc">Check connection status with target system</div>
+                <div class="command-name">/pm</div>
+                <div class="command-syntax">Syntax: /pm [user] [message]</div>
+                <div class="command-desc">Send private message to specified user</div>
             </div>
         </div>
 
         <div class="command-section">
-            <h2>SECURITY COMMANDS</h2>
-            <div class="command-item">
-                <div class="command-name">/encrypt</div>
-                <div class="command-syntax">Syntax: /encrypt [data] [key]</div>
-                <div class="command-desc">Encrypt data using specified encryption key</div>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/scan</div>
-                <div class="command-syntax">Syntax: /scan [target] [type]</div>
-                <div class="command-desc">Perform security scan on target system</div>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/trace</div>
-                <div class="command-syntax">Syntax: /trace [ip]</div>
-                <div class="command-desc">Trace route and analyze network path</div>
-            </div>
-        </div>
-
-        <div class="command-section">
-            <h2>ADMIN COMMANDS</h2>
+            <h2>MEMBERS COMMANDS</h2>
             <div class="command-item">
                 <div class="command-name">/kick</div>
-                <div class="command-syntax">Syntax: /kick [user] [reason]</div>
-                <div class="command-desc">Remove user from system (Admin/Mod only)</div>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/ban</div>
-                <div class="command-syntax">Syntax: /ban [ip/user] [duration] [reason]</div>
-                <div class="command-desc">Ban user or IP from accessing system (Admin only)</div>
-            </div>
-            <div class="command-item">
-                <div class="command-name">/logs</div>
-                <div class="command-syntax">Syntax: /logs [date] [type]</div>
-                <div class="command-desc">View system logs and security events (Admin only)</div>
+                <div class="command-syntax">Syntax: /kick [user]</div>
+                <div class="command-desc">Kick user from chat (Admin/Mod only)</div>
             </div>
         </div>
     </div>
 </body>
-</html> -->
-echo "comming soon hallo world";
+</html>
