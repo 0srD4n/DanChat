@@ -13,9 +13,13 @@ try {
 
     $nickname = filter_input(INPUT_GET, 'nickname', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
     $session = filter_input(INPUT_GET, 'session', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
-    $is_admin = false;
 
-
+    // Check if the user is logged in
+    if (empty($session)) {
+        // Redirect to the login page if not logged in
+        header("Location: ../index.php");
+        exit();
+    }
 
     // Get challenges data
     $stmt = $db->query("SELECT c.id, c.title, c.points, c.solved_by, cat.name as category
@@ -24,19 +28,18 @@ try {
                        ORDER BY cat.name, c.points DESC");
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-
-
-    // Get leaderboard data
-    $stmt = $db->query("SELECT nickname, solved 
-                       FROM leaderboard 
-                       ORDER BY points DESC");
+    // Get leaderboard data, only include members with chalange value of 1
+    $stmt = $db->query("SELECT nickname, chalange 
+                       FROM members 
+                       WHERE chalange > 0
+                       ORDER BY chalange DESC");
     $leaderboard = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 
 } catch(PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -138,12 +141,51 @@ try {
             color: #00ff88;
             font-weight: 600;
         }
+        .profile-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .profile-name {
+            color: #00ff88;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .profile-stat {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #222;
+            border-radius: 4px;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <div class="profile-info">
-        <span class="names"><?php echo $nickname; ?></span>
-        <span class="ctf-finish"><php? </span>
+    <div class="profile-card">
+        <div class="profile-header">
+            <h2 class="profile-name"><?php echo htmlspecialchars($nickname); ?></h2>
+        </div>
+        <div class="profile-body">
+            <div class="profile-stat">
+                <div class="stat-label">Challenges Solved</div>
+                <div class="stat-value">
+                    <?php echo ($ctf_finish == 0) ? "0" : $ctf_finish; ?>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="container">
         <div class="challenges-section">
@@ -169,7 +211,7 @@ try {
                 <?php foreach($leaderboard as $player): ?>
                     <tr>
                         <td><?php echo htmlspecialchars($player['nickname']); ?></td>
-                        <td><?php echo $player['solved']; ?></td>
+                        <td><?php echo $player['chalange']; ?></td>
                     </tr>
                 <?php endforeach; ?>
             </table>

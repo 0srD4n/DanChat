@@ -1,152 +1,287 @@
 <?php
+function navbar() {
+    echo "<style> nav {
+    text-align: center;
+    height: 40px;
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0,20,20,0.8);
+    border-bottom: 1px solid var(--neon-border-color);
+}
+
+nav a {
+    display: inline-block;
+    text-decoration: none;
+    color: var(--neon-text-color);
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+    transition: all 0.3s ease;
+}</style>";
+    echo "<nav>
+        <span class='menu'>
+        <a href=''>Home</a>
+        <a href=''>About</a>
+        <a href=''>Contact</a>
+        </span>
+    </nav>";
+}
 header('Content-Type: text/html; charset=UTF-8');
-?>
-<!DOCTYPE html>
+
+echo '<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DANCHAT ACCESS POINT</title>
+    <title>XplDan Gate</title>
     <link rel="icon" type="image/x-icon" href="danchat.svg">
     <style>
+        :root {
+            --neon-text-color: white;
+            --neon-border-color: #0f0;
+        }
+*{
+    box-sizing:border-box;
+}
         body {
             margin: 0;
             padding: 0;
             background-color: #000;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            color: var(--neon-text-color);
+            font-family: \'Courier New\', monospace;
             min-height: 100vh;
-            background-image: url('danchat.jpg');
+            background-image: url(\'danchat.jpg\');
             background-size: cover;
             background-position: center;
-            overflow: hidden;
-            font-size: 0.9em;
+            overflow-x: hidden;
         }
 
-        .container {
-            backdrop-filter: blur(10px);
+        .header {
+        margin-top:20px;
             text-align: center;
-            background: rgba(0,20,20,0.8); 
-            padding: 8px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,255,0,0.3);
-            border: 1px solid rgba(0,255,0,0.2);
-            animation: glowPulse 2s infinite;
-            max-width: 500px;
-            width: 85%;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            background: rgba(0,20,20,0.8);
+            border-bottom: 1px solid var(--neon-border-color);
         }
 
-        h1 {
-            font-size: 0.9em;
-            margin-bottom: 8px;
-            text-shadow: 0 0 8px #0f0;
-            animation: glitch 1s infinite;
-        }
-
-        .warning {
-            color: #ff0000;
-            margin: 8px 0;
-            font-size: 0.8em;
+        .header h1 {
+            font-size: 3em;
+            margin: 0;
             text-transform: uppercase;
+            letter-spacing: 0.15em;
         }
 
-        .enter-btn {
-            background: transparent;
-            color: #0f0;
-            border: 1px solid #0f0;
-            padding: 8px 16px;
-            font-size: 0.8em;
-            cursor: pointer;
+        .main-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            backdrop-filter: blur(10px);
+            background: rgba(0,20,20,0.8);
+            border: 1px solid var(--neon-border-color);
+            padding: 1.5rem;
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+
+     
+        .card h2 {
+            color: var(--neon-text-color);
+            margin-top: 0;
+            border-bottom: 1px solid var(--neon-border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .access-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .neon-link {
+            color: var(--neon-text-color);
+            text-decoration: none;
+            border: 1px solid var(--neon-text-color);
+            padding: 1rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 5px;
             transition: all 0.3s;
-            text-transform: uppercase;
-            margin-top: 15px;
-            font-family: 'Courier New', monospace;
         }
 
-        .enter-btn:hover {
-            background: rgba(0,255,0,0.1);
-            box-shadow: 0 0 15px rgba(0,255,0,0.5);
-            transform: scale(1.03);
+
+  
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            border: 1px solid var(--neon-border-color);
+            border-radius: 5px;
         }
 
-        @keyframes glowPulse {
-            0% { box-shadow: 0 0 15px rgba(0,255,0,0.3); }
-            50% { box-shadow: 0 0 25px rgba(0,255,0,0.5); }
-            100% { box-shadow: 0 0 15px rgba(0,255,0,0.3); }
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            background: rgba(0,20,20,0.8);
+            border-top: 1px solid var(--neon-border-color);
+            margin-top: 2rem;
         }
 
-        @keyframes matrixBg {
-            0% { background-position: 0 0; }
-            100% { background-position: 40px 40px; }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
         }
+.section{
+    display:inline;
+    width: 100%;
+    text-align:center;
+    height:20px;
+}
 
-        .disclaimer {
-            font-size: 0.7em;
-            color: #666;
-            margin-top: 20px;
-        }
+    .warn { 
+    color:red;
+    }
+.text-section{
+    border-bottom:1px solid green;
+padding:20px;
+align-items:center;
+font-size:50px;
+}
+.project p {
+width:100%;
+}
 
-        #loading {
-            display: none;
-            margin-top: 15px;
-            color: #0f0;
-            font-size: 0.8em;
-        }
+a {
+    color: inherit;
+    text-decoration: underline;
+}
+.kontainer {
+     position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+}
+    .slide {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      animation: slideshow 15s infinite;
+      opacity: 0;
+    }
+    .slide:nth-child(1) {
+      animation-delay: 0s;
+    }
+    .slide:nth-child(2) {
+      animation-delay: 5s; 
+    }
+    .slide:nth-child(3) {
+      animation-delay: 10s;
+    }
+    @keyframes slideshow {
+      0% { opacity: 0; }
+      5% { opacity: 1; }
+      33% { opacity: 1; }
+      38% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+.header-preview {
+    width: 100%;
+    height: 900px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+            border-bottom: 1px solid var(--neon-border-color);
+}
 
-        .progress-bar {
-            width: 100%;
-            height: 15px;
-            background: #111;
-            border: 1px solid #0f0;
-            margin-top: 15px;
-            overflow: hidden;
-        }
 
-        .progress {
-            width: 0%;
-            height: 100%;
-            background: #0f0;
-            transition: width 3s linear;
-        }
+.header-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>DanChat Access Point</h1>
-        <div class="warning">⚠ WARNING: RESTRICTED ACCESS ⚠</div>
-        <p>You are about to enter a secured network zone.</p>
-        <p>All activities are monitored and logged.</p>
-        <p>All store on the dark web all <strong style="color:red">scam</strong></p>
-        <form action="<?php echo htmlspecialchars('/chat/index.php'); ?>" method="GET">
-            <button type="submit" class="enter-btn">ENTER DANCHAT</button>
-        </form>
-        <div id="loading">
-            <p>Establishing secure connection...</p>
-            <div class="progress-bar">
-                <div class="progress" id="progress"></div>
+<body>';
+navbar();
+echo '
+    <header class="header">
+        <h1>XplDan Project</h1>
+        <p>This My Project</p>
+    </header>
+    <div class="header-preview">
+<div class="kontainer">
+  <img src="preview/prev_danchat.png" class="slide">
+  <img src="preview/prev2_danchat.png" class="slide">
+
+</div>
+</div>
+    <div class="section">
+<h2 class="text-section"> Chat Room </h2></div>
+    <main class="main-content">
+        <section class="card">
+            <h2>About</h2>
+            
+              <div class="project">
+                <p>Hello everyone, this is a chat room that I created using <a target="_blank" href="https://github.com/DanWin/le-chat-php">le-chat-php</a> by Danwin as the framework. I modified it and added several features that can be useful for admins and members.</p>
             </div>
-        </div>
+        </section>
+
+        <section class="card">
+            <h2>Security Features</h2>
+            <ul>
+                <li>End-to-End Encryption</li>
+                <li>Tor Network Support</li>
+                <li>Zero Logs Policy</li>
+                <li>Secure File Sharing</li>
+                <li>Anonymous Chat Rooms</li>
+                <li>One Gate Password</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <h2>Access Points</h2>
+            <div class="access-links">
+                <a href="' . htmlspecialchars('/chat/index.php') . '" class="neon-link">
+                    Enter DanChat
+                </a>
+                <a href="' . htmlspecialchars('http://7ezcvo2wrozkrakhitpnloz2m3l6uqa33st6lyyylpe7ptzdghpsc4yd.onion/chat/index.php') . '" class="neon-link">
+                    Tor Network Access
+                </a>
+                <a href="' . htmlspecialchars('http://danchat.run.place/chat/index.php') . '" class="neon-link">
+                    Clearnet Access
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p class="warn">⚠ WARNING: All activities are monitored and logged</p>
+        <p>Protected by Tor Network | Secure Connection</p>
         <p class="disclaimer">By entering, you acknowledge all risks and responsibilities.</p>
-        <div class="secure-icons">
-            <img src="https://www.torproject.org/static/images/tor-logo.svg" alt="Tor Logo" style="height: 40px; margin: 10px;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Padlock-green.svg/1024px-Padlock-green.svg.png" alt="Secure Lock" style="height: 40px; margin: 10px;">
-        </div>
-        <div class="secure-text" style="color: #0f0; font-size: 0.8em; margin-top: 10px;">
-            Protected by Tor Network | Secure Connection
-        </div>
-        <div class="tor-link" style="margin-top: 15px;">
-            <a href="<?php echo htmlspecialchars('http://7ezcvo2wrozkrakhitpnloz2m3l6uqa33st6lyyylpe7ptzdghpsc4yd.onion/chat/index.php'); ?>" style="color: #0f0; text-decoration: none; border: 1px solid #0f0; padding: 5px 10px; border-radius: 3px;">
-                Access via Tor Network
-            </a>
-        </div>
-        <div class="clearnet-link" style="margin-top: 15px;">
-            <a href="<?php echo htmlspecialchars('http://danchat.run.place/chat/index.php'); ?>" style="color: #0f0; text-decoration: none; border: 1px solid #0f0; padding: 5px 10px; border-radius: 3px;">
-                Access via Clearnet
-            </a>
-        </div>
-    </div>
+    </footer>
 </body>
-</html>
+</html>';
+?>

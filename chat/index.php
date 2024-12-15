@@ -819,8 +819,23 @@ function route_setup(): void
 	}
 	send_setup($C);
 }
+function guest_only(): void{
+	global $U;
+	if($U['status']<3){
+		echo"
+		<style>
+		#frameset-top { height: 12%; 
+		#overflow: hidden;
+		}
 
-//  html output subs
+		#frameset-mid {    height: 79%; top: 17.3%; }
+		#frameset-top iframe { height: 100%; }
+		</style>
+		";
+	}
+}
+
+
 function prepare_stylesheets(string $class): void
 {
 	global $U, $db,  $styles;
@@ -847,7 +862,31 @@ function print_stylesheet(string $class): void
 	}
 	// Fallback inline CSS if external blocked
 	echo '<style>
+	
+#abaout, #about2 {
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #1a1a1a;
+  background-color: #0a0a0a;
+  border-radius: 5px;
+}
 
+#abaout, #about2  {
+  color: white;
+  font-weight: bold;
+}
+  #about2 span {
+  color: red;
+  font-weight: bold;
+}
+root: {
+--border-all:00ff88;
+}
 	.public-notes-container {
 		background: #0a0a0a !important;
 		color: white;
@@ -855,7 +894,6 @@ function print_stylesheet(string $class): void
 		height: 100%;
 		border: 1px solid #1a1a1a;
 		border-radius: 5px;
-		box-shadow: 0 0 10px rgba(0,255,0,0.1);
 		max-width: 900px;
 		margin: 20px auto;
 	}
@@ -867,7 +905,6 @@ function print_stylesheet(string $class): void
 		text-transform: uppercase;
 		letter-spacing: 2px;
 		margin-bottom: 25px;
-		text-shadow: 0 0 5px rgba(0,255,0,0.5);
 	}
 
 	.public-notes-container hr {
@@ -927,7 +964,7 @@ input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; bord
 .messages #chatters {
   display: block;
   float: right;
-    background: rgba(0, 20, 20, 0.8);
+    background: transparant;
   width: 15%;
   overflow-y: auto;
   position: fixed;
@@ -936,10 +973,9 @@ input, select, textarea, button {padding: 0.2em; border: 1px solid #ffffff; bord
   top: 0;
   text-decoration: none;
   bottom: 0;
-  border-left: 1px solid #00ff00;
   scrollbar-width: thin;
   scrollbar-color: #00ff00 #000;
-  padding: 10px; 
+  padding: 30px; 
   padding-top:30px;
 }
 
@@ -1052,7 +1088,6 @@ input[type=text], input[type=password], input[type=submit], select, textarea {
     background-color: rgba(120,120,120,0.3);
     font-family: "monospace", system-ui;
     color: #fff !important;
-    padding: 5px;
     border-radius: 10px;
 }
 .error { color: #FF0033; text-align: left; }
@@ -1237,9 +1272,6 @@ backdrop-filter: blur(10px);
   padding: 35px;  
   padding-top: 10px;
   border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0,255,0,0.2);
-  box-shadow: 0 0 10px rgba(57,255,20,0.5);
-  animation: fadeIn 1s ease-out;
   max-width: auto;
 width: 400px;
   margin: 20px auto;
@@ -1262,7 +1294,6 @@ font-size:12px;
   border: 1px solid rgba(0,255,0,0.3);
   color: #00ff00;
   font-family: "Courier New", monospace;
-  transition: all 0.3s ease;
 }
 
 #nickname_input:focus,
@@ -1270,7 +1301,6 @@ font-size:12px;
 #regpass_input:focus,
 #globalpass_input:focus {
   border-color: #00ff00;
-  box-shadow: 0 0 10px rgba(0,255,0,0.3);
   outline: none;
 }
 
@@ -1283,7 +1313,6 @@ font-size:12px;
   text-transform: uppercase;
   letter-spacing: 2px;
   font-size: 0.9em;
-  text-shadow: 0 0 5px rgba(0,255,0,0.5);
 }
 
 #submit_button,
@@ -1300,12 +1329,7 @@ font-size:12px;
   transition: all 0.3s ease;
 }
 
-#submit_button:hover,
-#submit_btn:hover {
-  background: linear-gradient(45deg, #b90404, #990000);
-  box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
-  transform: scale(1.02);
-}
+
 
 
 .cyber-glitch-title {
@@ -1322,7 +1346,6 @@ font-size:12px;
     margin: 30px auto;
     max-width: 400px;
     box-sizing: border-box;
-    animation: matrixRain 2s infinite;
     overflow: hidden;
 }
 
@@ -1343,7 +1366,6 @@ font-size:12px;
 .cyber-glitch-title::before {
     left: 3px;
     text-shadow: -2px 0 #ff0000;
-    animation: glitchEffect1 750ms infinite;
     background: rgba(255,0,0,0.1);
     transform: skew(-20deg);
 }
@@ -1443,7 +1465,6 @@ font-size:12px;
   text-align: center;
   margin-top: 20px;
   position: relative;
-  animation: matrix-glitch 0.3s linear infinite;
 }
 
 #system_protocols::before {
@@ -1452,7 +1473,6 @@ font-size:12px;
   left: 2px;
   text-shadow: -2px 0 #ff00ff;
   clip: rect(0, 0, 0, 0);
-  animation: matrix-glitch 0.5s linear infinite alternate-reverse;
 }
 
 #system_protocols::after {
@@ -1461,7 +1481,6 @@ font-size:12px;
   left: -2px;
   text-shadow: -2px 0 #00ffff;
   clip: rect(0, 0, 0, 0);
-  animation: matrix-glitch 0.8s linear infinite alternate-reverse;
 }
 
 @keyframes matrix-glitch {
@@ -1524,16 +1543,17 @@ height: 30%;
   font-size: smaller;
 }
   .controls {
+  fi
     position: fixed;
 	    background: rgba(20, 22, 26, 0.95); 
-
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
-	background-color
+	background-color:rgba(0,0,0,0.5);
   }
 
+}
 .controls #donatebutton {
   background-color: #e5ff00;
   color: #000000;
@@ -1651,11 +1671,11 @@ color:red;
 
 #frameset-mid {
     position: fixed;
-    top: 18%;
+    top: 21.3%;
     left: 0;
     width: 100%;
 	overflow: hidden;
-    height: 77%;
+    height: 74%;
 	padding: 10px;
     margin: 0;
     padding: 0;
@@ -1675,32 +1695,32 @@ color:red;
 padding-top: 10px;
     background: rgba(0,0,0,0.5);
 }
-
 #frameset-top {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 13%;
+    height: 14.3%;
     margin-top: 2.5rem;
     z-index: 1;
 }
 
 #frameset-top iframe {
     width: 100%;
-    height: 100%;
+    height: 110%;
     border: none;
-    border-bottom: 1px solid #00ff00;
+    border-bottom: 1px solid #00ff88;
     background: rgba(0,0,0,0.8);
     overflow: hidden;
 }
+
 
 #frameset-bot {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 36px;
+    height: 28px;
     z-index: 1;
 }
 
@@ -1708,7 +1728,7 @@ padding-top: 10px;
     width: 100%;
     height: 100%;
     border: none;
-    border-top: 1px solid #00ff00;
+  border-top: 2px solid #00ff88;
     background: rgba(0,0,0,0.8);
     overflow: hidden;
 }
@@ -1799,7 +1819,6 @@ body.admin .admin-panel {
   border: 1px solid #1a1a1a;
   padding: 20px;
   border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0,255,0,0.2);
 }
 
 body.admin .admin-panel h2 {
@@ -1918,37 +1937,43 @@ body.admin .btn-danger {
 body.admin .btn:hover {
   box-shadow: 0 0 10px currentColor;
 }
-
 #navbar {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 40px;
-    background: rgba(20, 22, 26, 0.95); 
+  background: rgba(10, 12, 16, 0.95);
   display: flex;
   align-items: center;
-  border-bottom:1px solid #00ff00;
-  justify-content: flex-start;
-  padding: 0 15px;
-  z-index: 100;
+  justify-content: center;
+  padding: 0 20px;
 }
 
-#navbar a {
+#navbar form {
+  margin: 0 10px;
+}
+
+#navbar .cyber-link {
   color: white;
-  text-decoration: none;
+    background: transparent;
   font-family: "Share Tech Mono", monospace;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 2px;
-  padding: 8px 10px;
-  margin: 0 5px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 8px 15px;
+  border:none;
+  cursor: pointer;
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+}
+
+
+
+#navbar .cyber-link:active {
+  transform: translateY(1px);
 }
 
 
@@ -1964,6 +1989,8 @@ function print_end(): void
 	echo '</body></html>';
 	exit;
 }
+
+
 
 function credit() : string {
 	return '<small><br><br><a target="_blank" href="https://github.com/0srD4n/DanChat" rel="noreferrer noopener">- DanChat - ' . VERSION . '</a></small>';
@@ -3379,6 +3406,7 @@ function send_linkfilter(string $arg=''): void
 	echo form('admin', 'linkfilter').submit(_('Reload')).'</form>';
 	print_end();
 }
+
 function send_frameset(): void
 {
 	global $U, $db, $language, $dir;
@@ -3389,16 +3417,42 @@ function send_frameset(): void
 	echo '<link rel="icon" href="./icon.svg" type="image/svg+xml">';
 
 	print_stylesheet('frameset');
-    echo "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">";
-    echo "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>";
+	echo "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">";
+	echo "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>";
 	echo '</head><body>';
 	
 	// Add navbar
 	echo "<div id=\"navbar\">";
-	echo "<a href=\"navbar/link.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">LINK</a>";
-	echo "<a href=\"navbar/ctf.php?session=$U[session]&nickname=$U[nickname] &lang=$language\" class=\"cyber-link\" target=\"_blank\">CTF</a>"; 
-	echo "<a href=\"navbar/command.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">COMMAND</a>";
-	echo "<a href=\"navbar/changelog.php?session=$U[session]&lang=$language\" class=\"cyber-link\" target=\"_blank\">CHANGELOG</a>";
+	echo "<form method='post' action='navbar/link.php' target='_blank'>";
+	echo "<input type='hidden' name='session' value='$U[session]'>";
+	echo "<input type='hidden' name='lang' value='$language'>";
+	echo "<button type='submit' class='cyber-link'>LINK</button>";
+	echo "</form>";
+	
+	echo "<form method='post' action='navbar/ctf.php' target='_blank'>";
+	echo "<input type='hidden' name='session' value='$U[session]'>";
+	echo "<input type='hidden' name='nickname' value='$U[nickname]'>";
+	echo "<input type='hidden' name='lang' value='$language'>";
+	echo "<button type='submit' class='cyber-link'>CTF</button>";
+	echo "</form>";
+	
+	echo "<form method='post' action='navbar/command.php' target='_blank'>";
+	echo "<input type='hidden' name='session' value='$U[session]'>";
+	echo "<input type='hidden' name='lang' value='$language'>";
+	echo "<button type='submit' class='cyber-link'>COMMAND</button>";
+	echo "</form>";
+	
+	echo "<form method='post' action='navbar/changelog.php' target='_blank'>";
+	echo "<input type='hidden' name='session' value='$U[session]'>";
+	echo "<input type='hidden' name='lang' value='$language'>";
+	echo "<button type='submit' class='cyber-link'>CHANGELOG</button>";
+	echo "</form>";
+
+	echo "<form method='post' action='navbar/music.php' target='_blank'>";
+	echo "<input type='hidden' name='session' value='$U[session]'>";
+	echo "<input type='hidden' name='lang' value='$language'>";
+	echo "<button type='submit' class='cyber-link'>Music</button>";
+	echo "</form>";
 	echo "</div>";
 
 	if(isset($_POST['sort'])){
@@ -3440,10 +3494,12 @@ function send_frameset(): void
 	
 	// Add background frame div that appears behind all frames
 	echo '<div id="frame-background" class="cyber-background">';
-	echo '<div class="matrix-effect"></div>';
 	echo '</div>';
+	
+	guest_only();
+	
 	echo '<div id="frameset-mid">';
-	echo "<div id=\"frameset-mid\"><iframe name=\"view\" src=\"$_SERVER[SCRIPT_NAME]?action=$action_mid&session=$U[session]&lang=$language$bottom\">".noframe_html()."</iframe></div>";
+	echo "</span><div id=\"frameset-mid\"><iframe name=\"view\" src=\"$_SERVER[SCRIPT_NAME]?action=$action_mid&session=$U[session]&lang=$language$bottom\">".noframe_html()."</iframe></div>";
 	echo "<div id=\"frameset-top\"><iframe name=\"$action_top\" src=\"$_SERVER[SCRIPT_NAME]?action=$action_top&session=$U[session]&lang=$language\">".noframe_html()."</iframe></div>";
 	echo "<div id=\"frameset-bot\"><iframe name=\"$action_bot\" src=\"$_SERVER[SCRIPT_NAME]?action=$action_bot&session=$U[session]&lang=$language$sort_bot\">".noframe_html()."</iframe></div>";
 	echo '</body></html>';
@@ -4287,15 +4343,9 @@ function send_login(): void
 	}
 	echo '<h4 id="system_protocols">SYSTEM PROTOCOLS</h4>';
 	echo '<p id="rules_text">'._('No CP - No Spamming - No Gore/other illegal activity').'</p>';
-	echo '<span id="createdby">'._('Made With ❤️ By  ').'</span>'._("<strong style='color: #ff0000;'>XplDan</strong>");
-	echo '<div id="changelang">';
-	echo '<div id="lang_label">'._('Select System Language').'</div>';
-	echo '<div id="lang_grid">';
-	echo '<select id="langSelect" onchange="window.location.href=this.value">';
-	echo '<option value="" disabled selected>'._('Select Language').'</option>';
-	foreach(LANGUAGES as $lang=>$data){
-		echo '<option value="'.$_SERVER['SCRIPT_NAME'].'?lang='.$lang.'">'.$data['name'].'</option>';
-	}
+	echo '<p id="abaout">'._('Welcome back To Danchat Try !rules or !about. The chat is encrypt with RSA and your password is cant be read by anyone').'</p>';
+	echo  '<p id="about2">'._('chat perpouse for education and fun your life <span>information is important!</style>').'</p>';
+echo '<p>'._("No JS Needed"). '</p>';
 	echo '</select>';
 	echo '</div></div>';
 	echo '</p>'.credit();
@@ -5222,6 +5272,34 @@ function validate_input() : string {
 	}
 	$message=htmlspecialchars($message);
 	$message=preg_replace("/(\r?\n|\r\n?)/u", '<br>', $message);
+
+	// Auto-correct @mentions
+	$message = preg_replace_callback('/@(\w+)/', function($matches) use ($db) {
+		$partial_name = $matches[1];
+		
+		// Get all active nicknames from sessions
+		$stmt = $db->prepare('SELECT nickname FROM ' . PREFIX . 'sessions');
+		$stmt->execute();
+		$nicknames = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+		// Find closest match using Levenshtein distance
+		$closest = null;
+		$min_distance = PHP_INT_MAX;
+		foreach ($nicknames as $nick) {
+			$distance = levenshtein(strtolower($partial_name), strtolower($nick));
+			if ($distance < $min_distance) {
+				$min_distance = $distance;
+				$closest = $nick;
+			}
+		}
+
+		// Only replace if we found a reasonably close match
+		if ($closest !== null && $min_distance <= strlen($partial_name) / 2) {
+			return '@' . $closest;
+		}
+		return $matches[0];
+	}, $message);
+
 	if(isset($_POST['multi'])){
 		$message=preg_replace('/\s*<br>/u', '<br>', $message);
 		$message=preg_replace('/<br>(<br>)+/u', '<br><br>', $message);
@@ -5275,7 +5353,7 @@ function validate_input() : string {
 	}
 	if($poststatus!==9 && preg_match('~^/me~iu', $message)){
 		$displaysend=style_this(htmlspecialchars("$U[nickname] "), $U['style']);
-		$message=preg_replace("~^/me\s?~iu", '', $message);
+		$message=preg_replace("~^/me\s?~iu", " <span> </span> ", $message);
 	}
 	if(preg_match('~^/kick\s+(\S+)~i', $message, $match)) {
 		// Kick user
@@ -5389,9 +5467,28 @@ function validate_input() : string {
 		$displaysend = sprintf(get_setting('msgsendprv'), style_this(htmlspecialchars($U['nickname']), $U['style']), style_this(htmlspecialchars($recipient), $tmp['style']));
 		$inbox = $tmp['inbox'];
 		
+	} elseif(preg_match('~^/wizz\s+(\S+)~i', $message, $match)) {
+		// Send wizz effect to user
+		$recipient = $match[1];
+    
+		$stmt = $db->prepare('SELECT nickname FROM ' . PREFIX . 'sessions WHERE nickname=?');
+		$stmt->execute([$recipient]);
+		if(!$stmt->fetch()) {
+			return 'User not found';
+		}
+	
+		$_POST['sendto'] = '*';
+		$poststatus = 1;
+		
+		$message = 
+		style_this(htmlspecialchars($U['nickname']), $U['style']) . 
+		" sent a wizz to " . 
+		style_this(htmlspecialchars($recipient), $U['style']);
+		$displaysend = '';
+
 	} elseif(preg_match('~^/~', $message)) {
 		// If message starts with "/", don't send message
-		return 'what your command dude?';
+		return 'Available commands: /wizz username';
 	}
 	$message=apply_filter($message, $poststatus, $U['nickname']);
 	$message=create_hotlinks($message);
@@ -6174,7 +6271,7 @@ function init_chat(): void
 		$db->exec('CREATE TABLE ' . PREFIX . "ignored (id $primary, ign varchar(50) NOT NULL, ignby varchar(50) NOT NULL)$diskengine$charset;");
 		$db->exec('CREATE INDEX ' . PREFIX . 'ign ON ' . PREFIX . 'ignored(ign);');
 		$db->exec('CREATE INDEX ' . PREFIX . 'ignby ON ' . PREFIX . 'ignored(ignby);');
-		$db->exec('CREATE TABLE ' . PREFIX . "members  (id $primary, nickname varchar(50) NOT NULL UNIQUE, passhash varchar(255) NOT NULL, status smallint NOT NULL, refresh smallint NOT NULL, bgcolour char(6) NOT NULL, regedby varchar(50) DEFAULT '', lastlogin integer DEFAULT 0, loginfails integer unsigned NOT NULL DEFAULT 0, timestamps smallint NOT NULL, embed smallint NOT NULL, incognito smallint NOT NULL, style varchar(255) NOT NULL, nocache smallint NOT NULL, tz varchar(255) NOT NULL, eninbox smallint NOT NULL, sortupdown smallint NOT NULL, hidechatters smallint NOT NULL, nocache_old smallint NOT NULL)$diskengine$charset;");
+		$db->exec('CREATE TABLE ' . PREFIX . "members  (id $primary, nickname varchar(50) NOT NULL UNIQUE, passhash varchar(255) NOT NULL, status smallint NOT NULL, refresh smallint NOT NULL, bgcolour char(6) NOT NULL, regedby varchar(50) DEFAULT '', lastlogin integer DEFAULT 0, loginfails integer unsigned NOT NULL DEFAULT 0, timestamps smallint NOT NULL, embed smallint NOT NULL, incognito smallint NOT NULL, style varchar(255) NOT NULL, nocache smallint NOT NULL, tz varchar(255) NOT NULL, eninbox smallint NOT NULL, sortupdown smallint NOT NULL, hidechatters smallint NOT NULL, nocache_old smallint NOT NULL,chalange smallint NOT F)$diskengine$charset;");
 		$db->exec('CREATE TABLE ' . PREFIX . "inbox (id $primary, postdate integer NOT NULL, postid integer NOT NULL UNIQUE, poster varchar(50) NOT NULL, recipient varchar(50) NOT NULL, text text NOT NULL, FOREIGN KEY (recipient) REFERENCES " . PREFIX . "members(nickname) ON DELETE CASCADE ON UPDATE CASCADE)$diskengine$charset;");
 		$db->exec('CREATE INDEX ' . PREFIX . 'inbox_poster ON ' . PREFIX . 'inbox(poster);');
 		$db->exec('CREATE INDEX ' . PREFIX . 'inbox_recipient ON ' . PREFIX . 'inbox(recipient);');

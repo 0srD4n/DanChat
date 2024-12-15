@@ -27,9 +27,8 @@ $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? ''
         .header {
             text-align: center;
             padding: 20px;
-            border: 1px solid #00ff00;
+            border: 1px solid #00ff88;
             margin-bottom: 30px;
-            background: rgba(0, 255, 0, 0.05);
             text-transform: uppercase;
             letter-spacing: 2px;
         }
@@ -43,7 +42,7 @@ $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? ''
 
         .command-section h2 {
             color: #00ff00;
-            border-bottom: 1px solid #00ff00;
+            border-bottom: 1px solid #00ff88;
             padding-bottom: 10px;
             margin-bottom: 20px;
             text-align: center;
@@ -52,7 +51,7 @@ $status = filter_input(INPUT_GET, 'status', FILTER_SANITIZE_SPECIAL_CHARS) ?? ''
         .command-item {
             padding: 15px;
             background: rgba(0, 20, 0, 0.3);
-            border: 1px solid #00ff00;
+            border: 1px solid #00ff88;
             margin-bottom: 15px;
         }
 

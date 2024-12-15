@@ -143,6 +143,11 @@ $language = $_GET['lang'] ?? 'en';
                 <li><span class="tag security">BUGFIX</span> fixed layout on the mid frame and link page upadate command link</li>
                 <li><span class="tag feature">NEW</span> add command on the text area, add check offline website on the link page. </li>
             </ul>
+            <span class="version-number">v2.1.3</span>
+            <span class="date">2024-12-15</span>
+            <ul class="changes">
+                <li><span class="tag feature">NEW</span> add music area, add auto correct nickname on the send box,</li>
+            </ul>
         </div>
         </p>
     </div>

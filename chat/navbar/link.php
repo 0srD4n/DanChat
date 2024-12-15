@@ -117,52 +117,29 @@ try {
     <title>Link Hub</title>
     <meta http-equiv="refresh" content="3600">
     <style>
-        :root {
-            --primary-color: #00ff00;
-            --secondary-color: #00cc00;
-            --background-dark: #0a0a0a;
-            --text-light: #ffffff;
-            --border-color: #1a1a1a;
-            --hover-color: rgba(0, 255, 0, 0.1);
-        }
-
         body {
-            background-color: var(--background-dark);
-            color: var(--text-light);
+            background-color: #000;
+            color: white;
             font-family: 'Courier New', monospace;
             margin: 0;
             padding: 20px;
-            line-height: 1.6;
-            position: relative;
-            min-height: 100vh;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            position: relative;
-            z-index: 1;
         }
 
         .header {
             text-align: center;
             padding: 20px;
-            border: 1px solid var(--primary-color);
+            border: 1px solid #0f0;
             margin-bottom: 30px;
-            background: rgba(0, 20, 0, 0.2);
-            backdrop-filter: blur(5px);
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
         }
 
         .link-section {
-            margin-bottom: 40px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 8px;
+            text-align: center;
         }
-
-      
 
         .link-grid {
             display: grid;
@@ -172,37 +149,12 @@ try {
 
         .link-item {
             padding: 15px;
-            background: rgba(0, 20, 0, 0.3);
-            border: 1px solid var(--primary-color);
-            transition: all 0.3s ease;
-            border-radius: 5px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .link-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            border: 1px solid #0f0;
         }
 
         .link-item a {
-            color: var(--primary-color);
+            color: #0f0;
             text-decoration: none;
-            font-weight: bold;
-            display: block;
-            margin-bottom: 10px;
-            text-shadow: 0 0 5px var(--primary-color);
-        }
-
-        .link-item p {
-            color: var(--secondary-color);
-            font-size: 0.9em;
-            margin: 5px 0;
         }
 
         .status-indicator {
@@ -211,62 +163,32 @@ try {
             height: 8px;
             border-radius: 50%;
             margin-right: 10px;
-            position: relative;
         }
 
         .status-active {
-            background: var(--primary-color);
+            background: #0f0;
         }
 
         .status-offline {
-            background: #ff0000;
+            background: #f00;
         }
 
-
-        .analytics-panel {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 20, 0, 0.8);
-            padding: 15px;
-            border: 1px solid var(--primary-color);
-            border-radius: 5px;
-            font-size: 0.8em;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
         }
 
-        @media (max-width: 768px) {
-            .analytics-panel {
-                position: static;
-                margin: 20px auto;
-                transform: none;
-                max-width: 300px;
-            }
-            
-            .link-grid {
-                grid-template-columns: 1fr;
-            }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #0f0;
         }
 
-        h2 {
-            text-align: center;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--primary-color);
+        th {
+            background-color: #000;
+            color: #0f0;
         }
-
-        .important {
-            text-align: center;
-            color: var(--primary-color);
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .importants {
-            color:red;
-        }
-
     </style>
 </head>
 <body>
@@ -285,32 +207,42 @@ try {
         <?php else: ?>
             <?php foreach($sections as $section => $networks): ?>
             <div class="link-section">
-                <h2><?php echo htmlspecialchars($section); ?></h2>
-                <?php foreach($networks as $network => $links): ?>
-                <div class="network-container">
-                    <h3><?php echo htmlspecialchars(ucfirst($network)); ?></h3>
-                    <div class="link-grid">
-                        <?php foreach($links as $link): ?>
-                        <div class="link-item">
-                            <?php
-                            $status_class = $link['status'] == 1 ? 'status-active' : 'status-offline';
-                            $created_date = new DateTime($link['created_at']);
-                            $last_checked = $link['last_checked'] ? new DateTime($link['last_checked']) : null;
-                            ?>
-                            <span class="status-indicator <?php echo $status_class; ?>"></span>
-                            <a href="<?php echo htmlspecialchars($link['url']); ?>" target="_blank" rel="noopener noreferrer">
-                                <?php echo htmlspecialchars($link['title']); ?>
-                            </a>
-                            <p><?php echo htmlspecialchars($link['description']); ?></p>
-                            <p>Added: <?php echo $created_date->format('Y-m-d'); ?></p>
-                            <?php if($last_checked): ?>
-                            <p class="last-checked">Last checked: <?php echo $last_checked->format('Y-m-d H:i:s'); ?></p>
-                            <?php endif; ?>
-                        </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th><?php echo htmlspecialchars($section); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($networks as $network => $links): ?>
+                        <tr>
+                            <td>
+                                <h3><?php echo htmlspecialchars(ucfirst($network)); ?></h3>
+                                <div class="link-grid">
+                                    <?php foreach($links as $link): ?>
+                                    <div class="link-item">
+                                        <?php
+                                        $status_class = $link['status'] == 1 ? 'status-active' : 'status-offline';
+                                        $created_date = new DateTime($link['created_at']);
+                                        $last_checked = $link['last_checked'] ? new DateTime($link['last_checked']) : null;
+                                        ?>
+                                        <span class="status-indicator <?php echo $status_class; ?>"></span>
+                                        <a href="<?php echo htmlspecialchars($link['url']); ?>" target="_blank" rel="noopener noreferrer">
+                                            <?php echo htmlspecialchars($link['title']); ?>
+                                        </a>
+                                        <p><?php echo htmlspecialchars($link['description']); ?></p>
+                                        <p>Added: <?php echo $created_date->format('Y-m-d'); ?></p>
+                                        <?php if($last_checked): ?>
+                                        <p class="last-checked">Last checked: <?php echo $last_checked->format('Y-m-d H:i:s'); ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </td>
+                        </tr>
                         <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
             <?php endforeach; ?>
         <?php endif; ?>
